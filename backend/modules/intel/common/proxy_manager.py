@@ -63,13 +63,14 @@ class ProxyConfig:
 
 class ProxyManager:
     """
-    Proxy Manager with Failover (NOT rotation!)
+    Proxy Manager with Failover (NOT rotation!) and MongoDB Persistence
     
     Architecture:
     - Primary proxy used by default
     - If fails → automatic switch to backup
     - Order matters: 1 → 2 → 3
     - Admin can add/remove/reorder proxies
+    - Persists to MongoDB for restart recovery
     
     Usage:
         # For requests with failover
@@ -84,10 +85,94 @@ class ProxyManager:
     def __init__(self):
         self._proxies: List[ProxyConfig] = []
         self._next_id = 1
-        self._load_from_env()
+        self._db = None
+        self._loaded_from_db = False
+    
+    async def _get_db(self):
+        """Get database connection"""
+        if self._db is None:
+            try:
+                from motor.motor_asyncio import AsyncIOMotorClient
+                import os
+                client = AsyncIOMotorClient(os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))
+                self._db = client[os.environ.get('DB_NAME', 'test_database')]
+            except Exception as e:
+                logger.error(f"[Proxy] Failed to connect to DB: {e}")
+        return self._db
+    
+    async def load_from_db(self):
+        """Load proxies from MongoDB"""
+        if self._loaded_from_db:
+            return
+        
+        try:
+            db = await self._get_db()
+            if db is None:
+                return
+            
+            cursor = db.system_proxies.find({})
+            docs = await cursor.to_list(100)
+            
+            for doc in docs:
+                proxy = ProxyConfig(
+                    id=doc.get('id', self._next_id),
+                    server=doc.get('server'),
+                    priority=doc.get('priority', 1),
+                    enabled=doc.get('enabled', True),
+                    username=doc.get('username'),
+                    password=doc.get('password'),
+                    success_count=doc.get('success_count', 0),
+                    error_count=doc.get('error_count', 0),
+                    last_error=doc.get('last_error')
+                )
+                self._proxies.append(proxy)
+                if proxy.id >= self._next_id:
+                    self._next_id = proxy.id + 1
+            
+            self._loaded_from_db = True
+            
+            if self._proxies:
+                logger.info(f"[Proxy] Loaded {len(self._proxies)} proxies from MongoDB")
+            else:
+                # Fallback to env
+                self._load_from_env()
+                
+        except Exception as e:
+            logger.error(f"[Proxy] Failed to load from DB: {e}")
+            self._load_from_env()
+    
+    async def save_to_db(self):
+        """Save all proxies to MongoDB"""
+        try:
+            db = await self._get_db()
+            if db is None:
+                return
+            
+            # Clear and rewrite
+            await db.system_proxies.delete_many({})
+            
+            for proxy in self._proxies:
+                doc = {
+                    'id': proxy.id,
+                    'server': proxy.server,
+                    'priority': proxy.priority,
+                    'enabled': proxy.enabled,
+                    'username': proxy.username,
+                    'password': proxy.password,
+                    'success_count': proxy.success_count,
+                    'error_count': proxy.error_count,
+                    'last_error': proxy.last_error,
+                    'updated_at': datetime.now(timezone.utc)
+                }
+                await db.system_proxies.insert_one(doc)
+            
+            logger.info(f"[Proxy] Saved {len(self._proxies)} proxies to MongoDB")
+            
+        except Exception as e:
+            logger.error(f"[Proxy] Failed to save to DB: {e}")
     
     def _load_from_env(self):
-        """Load proxies from environment"""
+        """Load proxies from environment (fallback)"""
         # Primary proxy
         proxy_url = os.getenv("GLOBAL_PROXY")
         if proxy_url:
