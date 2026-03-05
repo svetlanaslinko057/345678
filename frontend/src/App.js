@@ -1193,23 +1193,71 @@ function App() {
             <Plus size={18} />
             Add Proxy
           </h3>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="col-span-2">
+          
+          {/* Row 1: Type, Host, Port */}
+          <div className="grid grid-cols-6 gap-4 mb-4">
+            <div>
               <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
-                Server URL *
+                Type *
+              </label>
+              <select
+                value={newProxy.type}
+                onChange={(e) => setNewProxy({...newProxy, type: e.target.value})}
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              >
+                <option value="http">HTTP</option>
+                <option value="https">HTTPS</option>
+                <option value="socks5">SOCKS5</option>
+              </select>
+            </div>
+            <div className="col-span-3">
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                IP Address / Host *
               </label>
               <input
                 type="text"
-                value={newProxy.server}
-                onChange={(e) => setNewProxy({...newProxy, server: e.target.value})}
-                placeholder="http://proxy.example.com:8080"
+                value={newProxy.host}
+                onChange={(e) => setNewProxy({...newProxy, host: e.target.value})}
+                placeholder="192.168.1.1 или proxy.example.com"
                 className="w-full px-4 py-2 rounded-xl border"
                 style={{ borderColor: colors.border }}
               />
             </div>
             <div>
               <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
-                Username
+                Port *
+              </label>
+              <input
+                type="text"
+                value={newProxy.port}
+                onChange={(e) => setNewProxy({...newProxy, port: e.target.value})}
+                placeholder="8080"
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+            <div>
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Priority
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={newProxy.priority}
+                onChange={(e) => setNewProxy({...newProxy, priority: parseInt(e.target.value) || 1})}
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+          </div>
+          
+          {/* Row 2: Username, Password, Add Button */}
+          <div className="grid grid-cols-6 gap-4">
+            <div className="col-span-2">
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Username (если требуется)
               </label>
               <input
                 type="text"
@@ -1220,9 +1268,9 @@ function App() {
                 style={{ borderColor: colors.border }}
               />
             </div>
-            <div>
+            <div className="col-span-2">
               <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
-                Password
+                Password (если требуется)
               </label>
               <input
                 type="password"
@@ -1233,35 +1281,35 @@ function App() {
                 style={{ borderColor: colors.border }}
               />
             </div>
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <div>
-              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
-                Priority (1 = highest)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={newProxy.priority}
-                onChange={(e) => setNewProxy({...newProxy, priority: parseInt(e.target.value) || 1})}
-                className="w-24 px-4 py-2 rounded-xl border"
-                style={{ borderColor: colors.border }}
-              />
+            <div className="col-span-2 flex items-end">
+              <button
+                onClick={addProxy}
+                disabled={proxyLoading || !newProxy.host || !newProxy.port}
+                className="w-full flex items-center justify-center gap-2 px-6 py-2 rounded-xl font-medium transition-all"
+                style={{ 
+                  backgroundColor: (newProxy.host && newProxy.port) ? colors.accent : colors.surface, 
+                  color: (newProxy.host && newProxy.port) ? 'white' : colors.textMuted 
+                }}
+              >
+                <Plus size={16} />
+                Add Proxy
+              </button>
             </div>
-            <button
-              onClick={addProxy}
-              disabled={proxyLoading || !newProxy.server}
-              className="mt-5 flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all"
-              style={{ 
-                backgroundColor: newProxy.server ? colors.accent : colors.surface, 
-                color: newProxy.server ? 'white' : colors.textMuted 
-              }}
-            >
-              <Plus size={16} />
-              Add Proxy
-            </button>
           </div>
+          
+          {/* Preview */}
+          {newProxy.host && newProxy.port && (
+            <div 
+              className="mt-4 p-3 rounded-xl text-sm"
+              style={{ backgroundColor: colors.surface }}
+            >
+              <span style={{ color: colors.textSecondary }}>Preview: </span>
+              <code style={{ color: colors.accent }}>
+                {buildProxyServer()}
+                {newProxy.username && ` (auth: ${newProxy.username}:***)`}
+              </code>
+            </div>
+          )}
         </div>
         
         {/* Proxy List */}
