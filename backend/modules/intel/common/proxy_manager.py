@@ -469,5 +469,10 @@ class ProxyManager:
         return {"results": results}
 
 
+# Initialize proxy manager with database loading
+async def init_proxy_manager():
+    """Initialize proxy manager and load from database"""
+    await proxy_manager.load_from_db()
+
 # Singleton instance
 proxy_manager = ProxyManager()
