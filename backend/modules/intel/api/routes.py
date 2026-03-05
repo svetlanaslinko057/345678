@@ -1868,27 +1868,52 @@ async def get_curated_unlocks(
     
     These are the final clean records for the frontend.
     """
-    now = int(datetime.now(timezone.utc).timestamp())
-    end = now + (days * 86400)
-    
-    query = {
-        "unlock_date": {"$gte": now, "$lte": end}
-    }
+    query = {}
     
     if symbol:
         query["symbol"] = symbol.upper()
     
     if min_usd:
-        query["amount_usd"] = {"$gte": min_usd}
+        query["value_usd"] = {"$gte": min_usd}
     
+    # Get all unlocks and filter by date in Python (handles both string and timestamp)
     cursor = db.intel_unlocks.find(query, {"_id": 0})
-    items = await cursor.sort("unlock_date", 1).limit(limit).to_list(limit)
+    all_items = await cursor.limit(500).to_list(500)
+    
+    # Filter by date
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
+    cutoff = now + timedelta(days=days)
+    
+    items = []
+    for item in all_items:
+        unlock_date = item.get('unlock_date') or item.get('unlock_timestamp')
+        if unlock_date:
+            # Convert to datetime for comparison
+            if isinstance(unlock_date, str):
+                try:
+                    dt = datetime.fromisoformat(unlock_date.replace('Z', '+00:00'))
+                except:
+                    try:
+                        dt = datetime.strptime(unlock_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                    except:
+                        continue
+            elif isinstance(unlock_date, (int, float)):
+                dt = datetime.fromtimestamp(unlock_date, tz=timezone.utc)
+            else:
+                continue
+            
+            if now <= dt <= cutoff:
+                items.append(item)
+    
+    # Sort by date
+    items.sort(key=lambda x: x.get('unlock_date', '') or x.get('unlock_timestamp', 0))
     
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "days_ahead": days,
-        "count": len(items),
-        "data": items
+        "count": len(items[:limit]),
+        "data": items[:limit]
     }
 
 
