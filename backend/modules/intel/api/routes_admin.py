@@ -1,11 +1,11 @@
 """
 Admin API Routes
-Source management, data control, configuration
+Source management, data control, configuration, bootstrap
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,170 @@ def get_coingecko_pool():
     """Get CoinGecko pool"""
     from modules.intel.sources.coingecko.client import coingecko_pool
     return coingecko_pool
+
+
+# ═══════════════════════════════════════════════════════════════
+# BOOTSTRAP / COLD START
+# ═══════════════════════════════════════════════════════════════
+
+@router.post("/bootstrap")
+async def run_bootstrap(db=Depends(get_db)):
+    """
+    Bootstrap the platform with seed data.
+    
+    Seeds:
+    - Persons (notable crypto figures)
+    - Exchanges (CEX/DEX)
+    - Projects (tokens)
+    - API Documentation
+    
+    Safe to run multiple times (upsert).
+    """
+    from datetime import datetime, timezone
+    
+    now = datetime.now(timezone.utc)
+    results = {}
+    
+    # Persons
+    PERSONS_DATA = [
+        {"name": "Vitalik Buterin", "slug": "vitalik-buterin", "role": "founder", "projects": ["Ethereum"]},
+        {"name": "Changpeng Zhao (CZ)", "slug": "cz-binance", "role": "founder", "projects": ["Binance"]},
+        {"name": "Brian Armstrong", "slug": "brian-armstrong", "role": "founder", "projects": ["Coinbase"]},
+        {"name": "Anatoly Yakovenko", "slug": "anatoly-yakovenko", "role": "founder", "projects": ["Solana"]},
+        {"name": "Hayden Adams", "slug": "hayden-adams", "role": "founder", "projects": ["Uniswap"]},
+        {"name": "Andre Cronje", "slug": "andre-cronje", "role": "founder", "projects": ["Yearn Finance"]},
+        {"name": "Stani Kulechov", "slug": "stani-kulechov", "role": "founder", "projects": ["Aave"]},
+        {"name": "Sergey Nazarov", "slug": "sergey-nazarov", "role": "founder", "projects": ["Chainlink"]},
+        {"name": "Gavin Wood", "slug": "gavin-wood", "role": "founder", "projects": ["Polkadot"]},
+        {"name": "Charles Hoskinson", "slug": "charles-hoskinson", "role": "founder", "projects": ["Cardano"]},
+        {"name": "Marc Andreessen", "slug": "marc-andreessen", "role": "investor", "projects": ["a16z"]},
+        {"name": "Chris Dixon", "slug": "chris-dixon", "role": "investor", "projects": ["a16z crypto"]},
+        {"name": "Fred Ehrsam", "slug": "fred-ehrsam", "role": "investor", "projects": ["Paradigm"]},
+        {"name": "Matt Huang", "slug": "matt-huang", "role": "investor", "projects": ["Paradigm"]},
+        {"name": "Olaf Carlson-Wee", "slug": "olaf-carlson-wee", "role": "investor", "projects": ["Polychain"]},
+        {"name": "Naval Ravikant", "slug": "naval-ravikant", "role": "investor", "projects": ["AngelList"]},
+        {"name": "Balaji Srinivasan", "slug": "balaji-srinivasan", "role": "investor", "projects": ["a16z"]},
+        {"name": "Dan Morehead", "slug": "dan-morehead", "role": "investor", "projects": ["Pantera Capital"]},
+        {"name": "Haseeb Qureshi", "slug": "haseeb-qureshi", "role": "investor", "projects": ["Dragonfly"]},
+        {"name": "Arthur Hayes", "slug": "arthur-hayes", "role": "founder", "projects": ["BitMEX"]},
+    ]
+    
+    for person in PERSONS_DATA:
+        doc = {"key": f"seed:person:{person['slug']}", "source": "seed", **person, "updated_at": now}
+        await db.intel_persons.update_one({"key": doc["key"]}, {"$set": doc}, upsert=True)
+    results["persons"] = len(PERSONS_DATA)
+    
+    # Exchanges
+    EXCHANGES_DATA = [
+        {"name": "Binance", "slug": "binance", "type": "CEX", "volume_rank": 1},
+        {"name": "Coinbase", "slug": "coinbase", "type": "CEX", "volume_rank": 2},
+        {"name": "Bybit", "slug": "bybit", "type": "CEX", "volume_rank": 3},
+        {"name": "OKX", "slug": "okx", "type": "CEX", "volume_rank": 4},
+        {"name": "Kraken", "slug": "kraken", "type": "CEX", "volume_rank": 5},
+        {"name": "KuCoin", "slug": "kucoin", "type": "CEX", "volume_rank": 6},
+        {"name": "Gate.io", "slug": "gate-io", "type": "CEX", "volume_rank": 7},
+        {"name": "Huobi", "slug": "huobi", "type": "CEX", "volume_rank": 8},
+        {"name": "MEXC", "slug": "mexc", "type": "CEX", "volume_rank": 9},
+        {"name": "Bitget", "slug": "bitget", "type": "CEX", "volume_rank": 10},
+        {"name": "Uniswap", "slug": "uniswap", "type": "DEX", "chain": "Ethereum"},
+        {"name": "dYdX", "slug": "dydx", "type": "DEX", "chain": "Cosmos"},
+        {"name": "HyperLiquid", "slug": "hyperliquid", "type": "DEX", "chain": "Arbitrum"},
+        {"name": "PancakeSwap", "slug": "pancakeswap", "type": "DEX", "chain": "BSC"},
+        {"name": "Curve", "slug": "curve", "type": "DEX", "chain": "Ethereum"},
+        {"name": "GMX", "slug": "gmx", "type": "DEX", "chain": "Arbitrum"},
+        {"name": "Raydium", "slug": "raydium", "type": "DEX", "chain": "Solana"},
+        {"name": "Jupiter", "slug": "jupiter", "type": "DEX", "chain": "Solana"},
+        {"name": "1inch", "slug": "1inch", "type": "DEX", "chain": "Multi-chain"},
+    ]
+    
+    for exchange in EXCHANGES_DATA:
+        doc = {"key": f"seed:exchange:{exchange['slug']}", "source": "seed", **exchange, "updated_at": now}
+        await db.intel_exchanges.update_one({"key": doc["key"]}, {"$set": doc}, upsert=True)
+    results["exchanges"] = len(EXCHANGES_DATA)
+    
+    # Projects
+    PROJECTS_DATA = [
+        {"name": "Bitcoin", "symbol": "BTC", "slug": "bitcoin", "category": "Currency"},
+        {"name": "Ethereum", "symbol": "ETH", "slug": "ethereum", "category": "Smart Contracts"},
+        {"name": "Solana", "symbol": "SOL", "slug": "solana", "category": "Smart Contracts"},
+        {"name": "Arbitrum", "symbol": "ARB", "slug": "arbitrum", "category": "Layer 2"},
+        {"name": "Optimism", "symbol": "OP", "slug": "optimism", "category": "Layer 2"},
+        {"name": "Polygon", "symbol": "MATIC", "slug": "polygon", "category": "Layer 2"},
+        {"name": "Avalanche", "symbol": "AVAX", "slug": "avalanche", "category": "Smart Contracts"},
+        {"name": "Chainlink", "symbol": "LINK", "slug": "chainlink", "category": "Oracle"},
+        {"name": "Uniswap", "symbol": "UNI", "slug": "uniswap", "category": "DEX"},
+        {"name": "Aave", "symbol": "AAVE", "slug": "aave", "category": "DeFi Lending"},
+        {"name": "Lido", "symbol": "LDO", "slug": "lido", "category": "Liquid Staking"},
+        {"name": "Maker", "symbol": "MKR", "slug": "maker", "category": "DeFi"},
+        {"name": "Celestia", "symbol": "TIA", "slug": "celestia", "category": "Modular"},
+        {"name": "Sui", "symbol": "SUI", "slug": "sui", "category": "Smart Contracts"},
+        {"name": "Aptos", "symbol": "APT", "slug": "aptos", "category": "Smart Contracts"},
+        {"name": "Starknet", "symbol": "STRK", "slug": "starknet", "category": "Layer 2"},
+        {"name": "LayerZero", "symbol": "ZRO", "slug": "layerzero", "category": "Cross-chain"},
+        {"name": "EigenLayer", "symbol": "EIGEN", "slug": "eigenlayer", "category": "Restaking"},
+        {"name": "Pyth Network", "symbol": "PYTH", "slug": "pyth", "category": "Oracle"},
+        {"name": "Jupiter", "symbol": "JUP", "slug": "jupiter", "category": "DEX"},
+    ]
+    
+    for project in PROJECTS_DATA:
+        doc = {"key": f"seed:project:{project['slug']}", "source": "seed", **project, "updated_at": now}
+        await db.intel_projects.update_one({"key": doc["key"]}, {"$set": doc}, upsert=True)
+    results["projects"] = len(PROJECTS_DATA)
+    
+    # Seed API Docs
+    try:
+        from modules.intel.api.documentation_registry import get_registry
+        registry = get_registry()
+        for endpoint in registry:
+            doc = endpoint.to_mongodb_doc()
+            await db.intel_docs.update_one(
+                {"endpoint_id": doc["endpoint_id"]},
+                {"$set": doc},
+                upsert=True
+            )
+        results["api_docs"] = len(registry)
+    except Exception as e:
+        results["api_docs"] = f"error: {str(e)}"
+    
+    # Get final counts
+    final_stats = {
+        "persons": await db.intel_persons.count_documents({}),
+        "exchanges": await db.intel_exchanges.count_documents({}),
+        "projects": await db.intel_projects.count_documents({}),
+        "investors": await db.intel_investors.count_documents({}),
+        "fundraising": await db.intel_fundraising.count_documents({}),
+        "unlocks": await db.intel_unlocks.count_documents({}),
+        "api_docs": await db.intel_docs.count_documents({}),
+        "proxies": await db.system_proxies.count_documents({}),
+    }
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "status": "bootstrap_complete",
+        "seeded": results,
+        "totals": final_stats
+    }
+
+
+@router.get("/stats")
+async def get_system_stats(db=Depends(get_db)):
+    """Get system-wide statistics"""
+    stats = {
+        "persons": await db.intel_persons.count_documents({}),
+        "exchanges": await db.intel_exchanges.count_documents({}),
+        "projects": await db.intel_projects.count_documents({}),
+        "investors": await db.intel_investors.count_documents({}),
+        "fundraising": await db.intel_fundraising.count_documents({}),
+        "unlocks": await db.intel_unlocks.count_documents({}),
+        "api_docs": await db.intel_docs.count_documents({}),
+        "proxies": await db.system_proxies.count_documents({}),
+        "categories": await db.intel_categories.count_documents({}),
+    }
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "stats": stats
+    }
 
 
 # ═══════════════════════════════════════════════════════════════
