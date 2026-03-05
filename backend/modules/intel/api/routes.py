@@ -1881,8 +1881,8 @@ async def get_curated_unlocks(
     all_items = await cursor.limit(500).to_list(500)
     
     # Filter by date
-    from datetime import datetime, timedelta, timezone
-    now = datetime.now(timezone.utc)
+    from datetime import datetime as dt_class, timedelta, timezone as tz
+    now = dt_class.now(tz.utc)
     cutoff = now + timedelta(days=days)
     
     items = []
@@ -1892,18 +1892,22 @@ async def get_curated_unlocks(
             # Convert to datetime for comparison
             if isinstance(unlock_date, str):
                 try:
-                    dt = datetime.fromisoformat(unlock_date.replace('Z', '+00:00'))
+                    parsed_dt = dt_class.fromisoformat(unlock_date.replace('Z', '+00:00'))
                 except:
                     try:
-                        dt = datetime.strptime(unlock_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+                        parsed_dt = dt_class.strptime(unlock_date, '%Y-%m-%d').replace(tzinfo=tz.utc)
                     except:
                         continue
             elif isinstance(unlock_date, (int, float)):
-                dt = datetime.fromtimestamp(unlock_date, tz=timezone.utc)
+                parsed_dt = dt_class.fromtimestamp(unlock_date, tz=tz.utc)
             else:
                 continue
             
-            if now <= dt <= cutoff:
+            # Ensure timezone aware
+            if parsed_dt.tzinfo is None:
+                parsed_dt = parsed_dt.replace(tzinfo=tz.utc)
+            
+            if now <= parsed_dt <= cutoff:
                 items.append(item)
     
     # Sort by date
