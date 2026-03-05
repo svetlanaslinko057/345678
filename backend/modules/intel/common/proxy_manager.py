@@ -335,11 +335,13 @@ class ProxyManager:
         logger.info(f"[Proxy] Removed proxy {proxy_id}")
         return {"removed": proxy_id}
     
-    def set_priority(self, proxy_id: int, priority: int) -> Dict:
+    async def set_priority(self, proxy_id: int, priority: int) -> Dict:
         """Set proxy priority"""
         for proxy in self._proxies:
             if proxy.id == proxy_id:
                 proxy.priority = priority
+                # Save to database
+                await self.save_to_db()
                 return {"id": proxy_id, "priority": priority}
         return {"error": f"Proxy {proxy_id} not found"}
     
