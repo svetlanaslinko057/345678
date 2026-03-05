@@ -150,7 +150,18 @@ async def run_bootstrap(db=Depends(get_db)):
     try:
         from modules.intel.api.documentation_registry import API_DOCUMENTATION
         for endpoint in API_DOCUMENTATION:
-            doc = endpoint.to_mongodb_doc()
+            doc = {
+                "endpoint_id": endpoint.endpoint_id,
+                "path": endpoint.path,
+                "method": endpoint.method.value,
+                "title_en": endpoint.title_en,
+                "title_ru": endpoint.title_ru,
+                "description_en": endpoint.description_en,
+                "description_ru": endpoint.description_ru,
+                "category": endpoint.category,
+                "tags": endpoint.tags,
+                "updated_at": now
+            }
             await db.intel_docs.update_one(
                 {"endpoint_id": doc["endpoint_id"]},
                 {"$set": doc},
