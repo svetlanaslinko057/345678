@@ -352,7 +352,7 @@ function App() {
                 <span className="font-medium capitalize" style={{ color: colors.text }}>
                   {provider.venue}
                 </span>
-                <StatusBadge status={provider.status === 'healthy' ? 'healthy' : 'error'} />
+                <StatusBadge status={provider.healthy ? 'healthy' : 'error'} />
               </div>
               <p className="text-sm" style={{ color: colors.textSecondary }}>
                 Latency: {provider.latency_ms?.toFixed(0) || 'N/A'}ms
