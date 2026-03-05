@@ -1203,20 +1203,55 @@ function App() {
           
           {/* Row 1: Type, Host, Port */}
           <div className="grid grid-cols-6 gap-4 mb-4">
-            <div>
+            <div className="relative">
               <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
                 Type *
               </label>
-              <select
-                value={newProxy.type}
-                onChange={(e) => setNewProxy({...newProxy, type: e.target.value})}
-                className="w-full px-4 py-2 rounded-xl border"
-                style={{ borderColor: colors.border }}
+              <div 
+                onClick={() => setTypeDropdownOpen(!typeDropdownOpen)}
+                className="w-full px-4 py-2 rounded-xl border cursor-pointer flex items-center justify-between"
+                style={{ borderColor: colors.border, backgroundColor: 'white' }}
               >
-                <option value="http">HTTP</option>
-                <option value="https">HTTPS</option>
-                <option value="socks5">SOCKS5</option>
-              </select>
+                <span style={{ color: colors.text }}>
+                  {proxyTypes.find(t => t.value === newProxy.type)?.label}
+                </span>
+                <ChevronRight 
+                  size={16} 
+                  style={{ 
+                    color: colors.textMuted,
+                    transform: typeDropdownOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} 
+                />
+              </div>
+              {typeDropdownOpen && (
+                <div 
+                  className="absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-50 overflow-hidden"
+                  style={{ backgroundColor: 'white', borderColor: colors.border }}
+                >
+                  {proxyTypes.map((type) => (
+                    <div
+                      key={type.value}
+                      onClick={() => {
+                        setNewProxy({...newProxy, type: type.value});
+                        setTypeDropdownOpen(false);
+                      }}
+                      className="px-4 py-2.5 cursor-pointer transition-all flex items-center gap-2"
+                      style={{ 
+                        backgroundColor: newProxy.type === type.value ? colors.accentSoft : 'white',
+                        color: newProxy.type === type.value ? colors.accent : colors.text
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = colors.surface}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = newProxy.type === type.value ? colors.accentSoft : 'white'}
+                    >
+                      {newProxy.type === type.value && (
+                        <CheckCircle size={14} style={{ color: colors.accent }} />
+                      )}
+                      <span className="font-medium">{type.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="col-span-3">
               <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
