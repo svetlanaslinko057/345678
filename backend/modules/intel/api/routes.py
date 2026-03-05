@@ -728,8 +728,21 @@ async def curated_activity(
                 'source': p.get('source', 'cryptorank')
             })
     
-    # Sort by date descending
-    items.sort(key=lambda x: x.get('date') or 0, reverse=True)
+    # Sort by date descending - ensure all dates are comparable
+    def get_sort_key(x):
+        date = x.get('date')
+        if date is None:
+            return 0
+        if isinstance(date, str):
+            try:
+                from datetime import datetime
+                # Try ISO format
+                return int(datetime.fromisoformat(date.replace('Z', '+00:00')).timestamp())
+            except:
+                return 0
+        return int(date) if date else 0
+    
+    items.sort(key=get_sort_key, reverse=True)
     
     return {
         'ts': int(datetime.now(timezone.utc).timestamp() * 1000),
