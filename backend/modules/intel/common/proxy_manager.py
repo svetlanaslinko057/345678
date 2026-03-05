@@ -345,11 +345,13 @@ class ProxyManager:
                 return {"id": proxy_id, "priority": priority}
         return {"error": f"Proxy {proxy_id} not found"}
     
-    def enable_proxy(self, proxy_id: int) -> Dict:
+    async def enable_proxy(self, proxy_id: int) -> Dict:
         """Enable proxy"""
         for proxy in self._proxies:
             if proxy.id == proxy_id:
                 proxy.enabled = True
+                # Save to database
+                await self.save_to_db()
                 return {"id": proxy_id, "enabled": True}
         return {"error": f"Proxy {proxy_id} not found"}
     
