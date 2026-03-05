@@ -391,11 +391,11 @@ class ProxyManager:
         """Get proxy list for admin"""
         return self.get_status()["proxies"]
     
-    def set_proxy(self, server: str, username: str = None, password: str = None):
+    async def set_proxy(self, server: str, username: str = None, password: str = None):
         """Set single proxy (legacy method - clears all and adds one)"""
         self._proxies = []
         self._next_id = 1
-        self.add_proxy(server, username, password, priority=1)
+        await self.add_proxy(server, username, password, priority=1)
     
     def clear_proxy(self):
         """Clear all proxies"""
