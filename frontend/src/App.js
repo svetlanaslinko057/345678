@@ -1549,6 +1549,7 @@ function App() {
               {activeTab === 'discovery' && 'Find data across the network'}
               {activeTab === 'developer' && 'System status and configuration'}
               {activeTab === 'api' && 'Complete API reference'}
+              {activeTab === 'admin' && 'Configure proxies for exchange providers'}
             </p>
           </div>
           <button
