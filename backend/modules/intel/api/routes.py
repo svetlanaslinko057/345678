@@ -1565,7 +1565,8 @@ async def set_proxy_priority(
 ):
     """Set proxy priority"""
     from ..common.proxy_manager import proxy_manager
-    result = proxy_manager.set_priority(proxy_id, priority)
+    await proxy_manager.load_from_db()
+    result = await proxy_manager.set_priority(proxy_id, priority)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "action": "priority_updated",
@@ -1577,7 +1578,8 @@ async def set_proxy_priority(
 async def enable_proxy(proxy_id: int):
     """Enable proxy"""
     from ..common.proxy_manager import proxy_manager
-    result = proxy_manager.enable_proxy(proxy_id)
+    await proxy_manager.load_from_db()
+    result = await proxy_manager.enable_proxy(proxy_id)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "action": "enabled",
@@ -1589,7 +1591,8 @@ async def enable_proxy(proxy_id: int):
 async def disable_proxy(proxy_id: int):
     """Disable proxy"""
     from ..common.proxy_manager import proxy_manager
-    result = proxy_manager.disable_proxy(proxy_id)
+    await proxy_manager.load_from_db()
+    result = await proxy_manager.disable_proxy(proxy_id)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "action": "disabled",
@@ -1603,6 +1606,7 @@ async def test_proxies(
 ):
     """Test proxy connectivity to Binance/Bybit"""
     from ..common.proxy_manager import proxy_manager
+    await proxy_manager.load_from_db()
     result = await proxy_manager.test_proxy(proxy_id)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
@@ -1623,7 +1627,8 @@ async def set_proxy(
     With auth: http://user:pass@proxy.example.com:8080
     """
     from ..common.proxy_manager import proxy_manager
-    proxy_manager.set_proxy(server, username, password)
+    await proxy_manager.load_from_db()
+    await proxy_manager.set_proxy(server, username, password)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "status": "set",
@@ -1635,7 +1640,8 @@ async def set_proxy(
 async def clear_proxy():
     """Clear all proxies - use direct connection"""
     from ..common.proxy_manager import proxy_manager
-    proxy_manager.clear_proxy()
+    await proxy_manager.load_from_db()
+    await proxy_manager.clear_proxy()
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "status": "cleared",
