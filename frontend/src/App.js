@@ -1043,7 +1043,14 @@ function App() {
   
   const [proxyStatus, setProxyStatus] = useState(null);
   const [proxyLoading, setProxyLoading] = useState(false);
-  const [newProxy, setNewProxy] = useState({ server: '', username: '', password: '', priority: 1 });
+  const [newProxy, setNewProxy] = useState({ 
+    host: '', 
+    port: '', 
+    type: 'http', 
+    username: '', 
+    password: '', 
+    priority: 1 
+  });
   const [testResults, setTestResults] = useState(null);
   
   const fetchProxyStatus = useCallback(async () => {
@@ -1056,17 +1063,28 @@ function App() {
     }
   }, []);
   
+  const buildProxyServer = () => {
+    if (!newProxy.host || !newProxy.port) return '';
+    return `${newProxy.type}://${newProxy.host}:${newProxy.port}`;
+  };
+  
   const addProxy = async () => {
-    if (!newProxy.server) return;
+    const server = buildProxyServer();
+    if (!server) return;
     setProxyLoading(true);
     try {
       const res = await fetch(`${API_URL}/api/intel/admin/proxy/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProxy)
+        body: JSON.stringify({
+          server,
+          username: newProxy.username || null,
+          password: newProxy.password || null,
+          priority: newProxy.priority
+        })
       });
       await res.json();
-      setNewProxy({ server: '', username: '', password: '', priority: 1 });
+      setNewProxy({ host: '', port: '', type: 'http', username: '', password: '', priority: 1 });
       await fetchProxyStatus();
     } catch (err) {
       console.error('Failed to add proxy:', err);
