@@ -137,8 +137,33 @@ API (routes.py) → /api/intel/curated/* → Frontend
 - `/api/intel/curated/unlocks` - исправлена фильтрация по дате
 - `/api/intel/curated/activity` - исправлена сортировка mixed types
 
+## Session 3: Proxy Admin UI (March 5, 2026)
+
+### Completed:
+1. ✅ **Proxy Admin UI** - новая страница в админке для управления прокси
+2. ✅ **Add/Remove/Enable/Disable** - полное CRUD для прокси
+3. ✅ **Test Proxies** - проверка связи с Binance/Bybit через прокси
+4. ✅ **Priority System** - прокси с failover (1 → 2 → 3)
+5. ✅ **Binance/Bybit Adapters** - обновлены для использования прокси
+
+### Backend API:
+- `GET /api/intel/admin/proxy/status` - статус прокси
+- `POST /api/intel/admin/proxy/add` - добавить прокси
+- `DELETE /api/intel/admin/proxy/{id}` - удалить
+- `POST /api/intel/admin/proxy/{id}/enable` - включить
+- `POST /api/intel/admin/proxy/{id}/disable` - выключить
+- `POST /api/intel/admin/proxy/test` - тест связи
+- `POST /api/intel/admin/proxy/clear` - очистить все
+
+### Frontend:
+- Navigation: System → Proxy Admin
+- Add Proxy form (server, username, password, priority)
+- Proxy list with status, success/error counts
+- Test/Enable/Disable/Remove buttons per proxy
+
 ## Test Results (March 5, 2026)
-- Backend: 100% (20/20 tests passed)
-- Frontend: 100% (all UI components working)
-- Integration: 100% (seamless communication)
+- Backend: 100% (33/33 tests passed)
+- Frontend: 100% (All UI components working)
+- Integration: 100%
 - CryptoRank Ingest: ✅ Working
+- Proxy Admin: ✅ Working
