@@ -137,6 +137,15 @@ async def list_categories():
     Get list of documentation categories.
     """
     categories = [
+        {"id": "global", "name_en": "Global Stats", "name_ru": "Глобальная статистика"},
+        {"id": "projects", "name_en": "Projects", "name_ru": "Проекты"},
+        {"id": "funds", "name_en": "Funds / VCs", "name_ru": "Фонды / VC"},
+        {"id": "persons", "name_en": "Persons", "name_ru": "Персоны"},
+        {"id": "fundraising", "name_en": "Fundraising", "name_ru": "Финансирование"},
+        {"id": "unlocks", "name_en": "Token Unlocks", "name_ru": "Анлоки токенов"},
+        {"id": "ico", "name_en": "ICO / Token Sales", "name_ru": "ICO / Продажи токенов"},
+        {"id": "exchanges", "name_en": "Exchanges", "name_ru": "Биржи"},
+        {"id": "search", "name_en": "Search", "name_ru": "Поиск"},
         {"id": "entity", "name_en": "Entity Intelligence", "name_ru": "Интеллект сущностей"},
         {"id": "query", "name_en": "Query Engine", "name_ru": "Движок запросов"},
         {"id": "correlation", "name_en": "Event Correlation", "name_ru": "Корреляция событий"},
