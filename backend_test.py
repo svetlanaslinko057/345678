@@ -356,6 +356,9 @@ class CryptoIntelAPITester:
         print(f"📡 Testing against: {self.base_url}")
         print("=" * 60)
         
+        # Initialize proxy ID tracker
+        self.test_proxy_id = None
+        
         # Core health tests
         self.test_health_endpoint()
         
@@ -370,6 +373,28 @@ class CryptoIntelAPITester:
         self.test_intel_curated_activity()
         self.test_intel_investors()
         self.test_intel_unlocks()
+        
+        # Proxy management tests
+        print("\n🔧 PROXY MANAGEMENT TESTS")
+        print("-" * 40)
+        
+        # Test initial proxy status
+        self.test_proxy_status()
+        
+        # Test adding a proxy
+        success, proxy_id = self.test_add_proxy()
+        
+        # Test proxy operations if proxy was created
+        if success and proxy_id:
+            self.test_proxy_enable_disable(proxy_id)
+            self.test_proxy_connectivity()
+            self.test_remove_proxy(proxy_id)
+        
+        # Test status after operations
+        self.test_proxy_status()
+        
+        # Test clear all (cleanup)
+        self.test_clear_all_proxies()
         
         # Print summary
         print("\n" + "=" * 60)
