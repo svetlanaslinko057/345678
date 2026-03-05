@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-03-05T14:37:46.000018",
+  "total_tests": 20,
+  "passed_tests": 20,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "results": [
+    {
+      "test": "Backend Health Check",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:42.148428"
+    },
+    {
+      "test": "Health Response Structure",
+      "success": true,
+      "details": "ok:true found",
+      "timestamp": "2026-03-05T14:37:42.148910"
+    },
+    {
+      "test": "Exchange Providers Health",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:42.636690"
+    },
+    {
+      "test": "HyperLiquid Health",
+      "success": true,
+      "details": "Provider is healthy",
+      "timestamp": "2026-03-05T14:37:42.637252"
+    },
+    {
+      "test": "Coinbase Health",
+      "success": true,
+      "details": "Provider is healthy",
+      "timestamp": "2026-03-05T14:37:42.637259"
+    },
+    {
+      "test": "HyperLiquid BTC Ticker",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:44.032715"
+    },
+    {
+      "test": "HyperLiquid Ticker Data",
+      "success": true,
+      "details": "Price: 72580.0",
+      "timestamp": "2026-03-05T14:37:44.033275"
+    },
+    {
+      "test": "Coinbase BTC-USD Ticker",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:44.323398"
+    },
+    {
+      "test": "Coinbase Ticker Data",
+      "success": true,
+      "details": "Price: 72627.77",
+      "timestamp": "2026-03-05T14:37:44.323997"
+    },
+    {
+      "test": "ETH Price Aggregation",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:45.484761"
+    },
+    {
+      "test": "Price Aggregation Data",
+      "success": true,
+      "details": "Found 2 venue prices, avg: 2122.9",
+      "timestamp": "2026-03-05T14:37:45.485331"
+    },
+    {
+      "test": "Intel Statistics",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:45.608102"
+    },
+    {
+      "test": "Intel Collections Data",
+      "success": true,
+      "details": "Collections: 7 types, investors: 8, unlocks: 6, fundraising: 8, projects: 100, activity: 15, launchpads: 0, categories: 675",
+      "timestamp": "2026-03-05T14:37:45.608681"
+    },
+    {
+      "test": "Intel Curated Activity",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:45.756040"
+    },
+    {
+      "test": "Activity Feed Data",
+      "success": true,
+      "details": "Found 14 activity items",
+      "timestamp": "2026-03-05T14:37:45.756633"
+    },
+    {
+      "test": "Activity Item Structure",
+      "success": true,
+      "details": "Type: unlock",
+      "timestamp": "2026-03-05T14:37:45.756643"
+    },
+    {
+      "test": "Intel Investors",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:45.882842"
+    },
+    {
+      "test": "Investors Data",
+      "success": true,
+      "details": "Found 8 items, total: 8",
+      "timestamp": "2026-03-05T14:37:45.883337"
+    },
+    {
+      "test": "Intel Unlocks",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T14:37:45.999173"
+    },
+    {
+      "test": "Unlocks Data",
+      "success": true,
+      "details": "Found 6 unlock events",
+      "timestamp": "2026-03-05T14:37:45.999767"
+    }
+  ],
+  "failures": []
+}
