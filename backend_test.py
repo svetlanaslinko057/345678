@@ -248,6 +248,108 @@ class CryptoIntelAPITester:
         
         return success
 
+    def test_proxy_status(self):
+        """Test proxy status endpoint"""
+        print("\n🔍 Testing Proxy Status...")
+        success, data = self.test_api_call("/api/intel/admin/proxy/status", 
+                                         test_name="Proxy Status")
+        
+        if success:
+            configured = data.get('configured', False)
+            total = data.get('total', 0)
+            enabled = data.get('enabled', 0)
+            self.log_result("Proxy Configuration", True, 
+                          f"Configured: {configured}, Total: {total}, Enabled: {enabled}")
+        
+        return success
+
+    def test_add_proxy(self):
+        """Test adding a proxy"""
+        print("\n🔍 Testing Add Proxy...")
+        proxy_data = {
+            "server": "http://test-proxy.example.com:8080",
+            "username": "testuser",
+            "password": "testpass",
+            "priority": 1
+        }
+        
+        success, data = self.test_api_call("/api/intel/admin/proxy/add", 
+                                         method="POST",
+                                         data=proxy_data,
+                                         test_name="Add Test Proxy")
+        
+        if success:
+            proxy_id = data.get('id')
+            if proxy_id:
+                self.log_result("Proxy Creation", True, f"Created proxy ID: {proxy_id}")
+                # Store proxy ID for cleanup
+                self.test_proxy_id = proxy_id
+                return True, proxy_id
+            else:
+                self.log_result("Proxy Creation", False, "No proxy ID returned")
+        
+        return success, None
+
+    def test_proxy_enable_disable(self, proxy_id):
+        """Test enabling and disabling proxy"""
+        if not proxy_id:
+            return False
+            
+        print("\n🔍 Testing Proxy Enable/Disable...")
+        
+        # Test disable
+        success1, _ = self.test_api_call(f"/api/intel/admin/proxy/{proxy_id}/disable", 
+                                       method="POST",
+                                       test_name="Disable Proxy")
+        
+        # Test enable
+        success2, _ = self.test_api_call(f"/api/intel/admin/proxy/{proxy_id}/enable", 
+                                       method="POST",
+                                       test_name="Enable Proxy")
+        
+        return success1 and success2
+
+    def test_proxy_connectivity(self):
+        """Test proxy connectivity"""
+        print("\n🔍 Testing Proxy Connectivity...")
+        success, data = self.test_api_call("/api/intel/admin/proxy/test", 
+                                         method="POST",
+                                         test_name="Test Proxy Connectivity")
+        
+        if success:
+            results = data.get('results', [])
+            if results:
+                self.log_result("Proxy Test Results", True, f"Tested {len(results)} proxies")
+                for result in results:
+                    proxy_id = result.get('id', 'N/A')
+                    tests = result.get('tests', [])
+                    success_count = sum(1 for test in tests if test.get('success'))
+                    self.log_result(f"Proxy {proxy_id} Tests", True, 
+                                  f"{success_count}/{len(tests)} tests passed")
+            else:
+                self.log_result("Proxy Test Results", False, "No test results returned")
+        
+        return success
+
+    def test_remove_proxy(self, proxy_id):
+        """Test removing a proxy"""
+        if not proxy_id:
+            return False
+            
+        print("\n🔍 Testing Remove Proxy...")
+        success, _ = self.test_api_call(f"/api/intel/admin/proxy/{proxy_id}", 
+                                      method="DELETE",
+                                      test_name="Remove Test Proxy")
+        return success
+
+    def test_clear_all_proxies(self):
+        """Test clearing all proxies"""
+        print("\n🔍 Testing Clear All Proxies...")
+        success, _ = self.test_api_call("/api/intel/admin/proxy/clear", 
+                                      method="POST",
+                                      test_name="Clear All Proxies")
+        return success
+
     def run_all_tests(self):
         """Run all test suites"""
         print("🚀 Starting Crypto Intelligence API Test Suite")
