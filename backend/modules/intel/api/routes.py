@@ -1502,6 +1502,8 @@ async def get_intel_health():
 async def get_proxy_status():
     """Get current proxy configuration status"""
     from ..common.proxy_manager import proxy_manager
+    # Ensure proxies are loaded from DB
+    await proxy_manager.load_from_db()
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         **proxy_manager.get_status()
@@ -1524,9 +1526,10 @@ async def add_proxy(
     }
     """
     from ..common.proxy_manager import proxy_manager
+    await proxy_manager.load_from_db()
     data = await request.json()
     
-    result = proxy_manager.add_proxy(
+    result = await proxy_manager.add_proxy(
         server=data.get("server"),
         username=data.get("username"),
         password=data.get("password"),
@@ -1545,7 +1548,8 @@ async def add_proxy(
 async def remove_proxy(proxy_id: int):
     """Remove proxy by ID"""
     from ..common.proxy_manager import proxy_manager
-    result = proxy_manager.remove_proxy(proxy_id)
+    await proxy_manager.load_from_db()
+    result = await proxy_manager.remove_proxy(proxy_id)
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "action": "removed",
