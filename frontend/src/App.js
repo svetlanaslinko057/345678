@@ -1037,6 +1037,391 @@ function App() {
     );
   };
 
+  // ═══════════════════════════════════════════════════════════════
+  // ADMIN - PROXY MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════
+  
+  const [proxyStatus, setProxyStatus] = useState(null);
+  const [proxyLoading, setProxyLoading] = useState(false);
+  const [newProxy, setNewProxy] = useState({ server: '', username: '', password: '', priority: 1 });
+  const [testResults, setTestResults] = useState(null);
+  
+  const fetchProxyStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/intel/admin/proxy/status`);
+      const data = await res.json();
+      setProxyStatus(data);
+    } catch (err) {
+      console.error('Failed to fetch proxy status:', err);
+    }
+  }, []);
+  
+  const addProxy = async () => {
+    if (!newProxy.server) return;
+    setProxyLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/intel/admin/proxy/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProxy)
+      });
+      await res.json();
+      setNewProxy({ server: '', username: '', password: '', priority: 1 });
+      await fetchProxyStatus();
+    } catch (err) {
+      console.error('Failed to add proxy:', err);
+    }
+    setProxyLoading(false);
+  };
+  
+  const removeProxy = async (proxyId) => {
+    setProxyLoading(true);
+    try {
+      await fetch(`${API_URL}/api/intel/admin/proxy/${proxyId}`, { method: 'DELETE' });
+      await fetchProxyStatus();
+    } catch (err) {
+      console.error('Failed to remove proxy:', err);
+    }
+    setProxyLoading(false);
+  };
+  
+  const toggleProxy = async (proxyId, enabled) => {
+    setProxyLoading(true);
+    try {
+      const endpoint = enabled ? 'disable' : 'enable';
+      await fetch(`${API_URL}/api/intel/admin/proxy/${proxyId}/${endpoint}`, { method: 'POST' });
+      await fetchProxyStatus();
+    } catch (err) {
+      console.error('Failed to toggle proxy:', err);
+    }
+    setProxyLoading(false);
+  };
+  
+  const testProxies = async (proxyId = null) => {
+    setProxyLoading(true);
+    setTestResults(null);
+    try {
+      const url = proxyId 
+        ? `${API_URL}/api/intel/admin/proxy/test?proxy_id=${proxyId}`
+        : `${API_URL}/api/intel/admin/proxy/test`;
+      const res = await fetch(url, { method: 'POST' });
+      const data = await res.json();
+      setTestResults(data);
+    } catch (err) {
+      console.error('Failed to test proxies:', err);
+    }
+    setProxyLoading(false);
+  };
+  
+  const clearAllProxies = async () => {
+    if (!window.confirm('Clear all proxies? Exchanges will use direct connection.')) return;
+    setProxyLoading(true);
+    try {
+      await fetch(`${API_URL}/api/intel/admin/proxy/clear`, { method: 'POST' });
+      await fetchProxyStatus();
+    } catch (err) {
+      console.error('Failed to clear proxies:', err);
+    }
+    setProxyLoading(false);
+  };
+  
+  useEffect(() => {
+    if (activeTab === 'admin') {
+      fetchProxyStatus();
+    }
+  }, [activeTab, fetchProxyStatus]);
+  
+  const renderAdmin = () => {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold" style={{ color: colors.text }}>
+              Proxy Management
+            </h2>
+            <p className="text-sm" style={{ color: colors.textSecondary }}>
+              Configure proxies for Binance, Bybit and parsers
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => testProxies()}
+              disabled={proxyLoading}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
+              style={{ backgroundColor: colors.accentSoft, color: colors.accent }}
+            >
+              <Play size={16} />
+              Test All
+            </button>
+            <button
+              onClick={fetchProxyStatus}
+              disabled={proxyLoading}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
+              style={{ backgroundColor: colors.surface, color: colors.textSecondary }}
+            >
+              <RefreshCw size={16} className={proxyLoading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
+        </div>
+        
+        {/* Add Proxy Form */}
+        <div 
+          className="bg-white rounded-2xl border p-6"
+          style={{ borderColor: colors.border }}
+        >
+          <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: colors.text }}>
+            <Plus size={18} />
+            Add Proxy
+          </h3>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="col-span-2">
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Server URL *
+              </label>
+              <input
+                type="text"
+                value={newProxy.server}
+                onChange={(e) => setNewProxy({...newProxy, server: e.target.value})}
+                placeholder="http://proxy.example.com:8080"
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+            <div>
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Username
+              </label>
+              <input
+                type="text"
+                value={newProxy.username}
+                onChange={(e) => setNewProxy({...newProxy, username: e.target.value})}
+                placeholder="optional"
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+            <div>
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={newProxy.password}
+                onChange={(e) => setNewProxy({...newProxy, password: e.target.value})}
+                placeholder="optional"
+                className="w-full px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 mt-4">
+            <div>
+              <label className="text-sm mb-1 block" style={{ color: colors.textSecondary }}>
+                Priority (1 = highest)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={newProxy.priority}
+                onChange={(e) => setNewProxy({...newProxy, priority: parseInt(e.target.value) || 1})}
+                className="w-24 px-4 py-2 rounded-xl border"
+                style={{ borderColor: colors.border }}
+              />
+            </div>
+            <button
+              onClick={addProxy}
+              disabled={proxyLoading || !newProxy.server}
+              className="mt-5 flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all"
+              style={{ 
+                backgroundColor: newProxy.server ? colors.accent : colors.surface, 
+                color: newProxy.server ? 'white' : colors.textMuted 
+              }}
+            >
+              <Plus size={16} />
+              Add Proxy
+            </button>
+          </div>
+        </div>
+        
+        {/* Proxy List */}
+        <div 
+          className="bg-white rounded-2xl border p-6"
+          style={{ borderColor: colors.border }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold flex items-center gap-2" style={{ color: colors.text }}>
+              <Network size={18} />
+              Configured Proxies
+            </h3>
+            {proxyStatus?.total > 0 && (
+              <button
+                onClick={clearAllProxies}
+                className="text-sm px-3 py-1 rounded-lg"
+                style={{ backgroundColor: colors.errorSoft, color: colors.error }}
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+          
+          {!proxyStatus || proxyStatus.total === 0 ? (
+            <div className="text-center py-8">
+              <Wifi size={48} className="mx-auto mb-4" style={{ color: colors.textMuted }} />
+              <p className="font-medium" style={{ color: colors.text }}>No proxies configured</p>
+              <p className="text-sm" style={{ color: colors.textSecondary }}>
+                Add a proxy above to route Binance/Bybit traffic
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {proxyStatus.proxies?.map((proxy) => (
+                <div 
+                  key={proxy.id}
+                  className="flex items-center justify-between p-4 rounded-xl border"
+                  style={{ 
+                    borderColor: proxy.enabled ? colors.border : colors.errorSoft,
+                    backgroundColor: proxy.enabled ? 'white' : colors.surface
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ 
+                        backgroundColor: proxy.enabled ? colors.successSoft : colors.errorSoft 
+                      }}
+                    >
+                      {proxy.enabled ? (
+                        <CheckCircle size={20} style={{ color: colors.success }} />
+                      ) : (
+                        <XCircle size={20} style={{ color: colors.error }} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium" style={{ color: colors.text }}>
+                        {proxy.server}
+                        {proxy.has_auth && (
+                          <span 
+                            className="ml-2 text-xs px-2 py-0.5 rounded"
+                            style={{ backgroundColor: colors.warningSoft, color: colors.warning }}
+                          >
+                            Auth
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>
+                        Priority: {proxy.priority} • 
+                        Success: {proxy.success_count} • 
+                        Errors: {proxy.error_count}
+                        {proxy.last_error && (
+                          <span style={{ color: colors.error }}> • Last error: {proxy.last_error.slice(0, 50)}...</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => testProxies(proxy.id)}
+                      className="p-2 rounded-lg transition-all"
+                      style={{ backgroundColor: colors.surface }}
+                      title="Test this proxy"
+                    >
+                      <Play size={16} style={{ color: colors.accent }} />
+                    </button>
+                    <button
+                      onClick={() => toggleProxy(proxy.id, proxy.enabled)}
+                      className="p-2 rounded-lg transition-all"
+                      style={{ backgroundColor: proxy.enabled ? colors.warningSoft : colors.successSoft }}
+                      title={proxy.enabled ? 'Disable' : 'Enable'}
+                    >
+                      {proxy.enabled ? (
+                        <XCircle size={16} style={{ color: colors.warning }} />
+                      ) : (
+                        <CheckCircle size={16} style={{ color: colors.success }} />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => removeProxy(proxy.id)}
+                      className="p-2 rounded-lg transition-all"
+                      style={{ backgroundColor: colors.errorSoft }}
+                      title="Remove"
+                    >
+                      <Trash2 size={16} style={{ color: colors.error }} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Test Results */}
+        {testResults && (
+          <div 
+            className="bg-white rounded-2xl border p-6"
+            style={{ borderColor: colors.border }}
+          >
+            <h3 className="font-semibold mb-4 flex items-center gap-2" style={{ color: colors.text }}>
+              <Activity size={18} />
+              Test Results
+            </h3>
+            <div className="space-y-4">
+              {testResults.results?.map((result, i) => (
+                <div key={i} className="border rounded-xl p-4" style={{ borderColor: colors.border }}>
+                  <p className="font-medium mb-2" style={{ color: colors.text }}>
+                    Proxy #{result.id}: {result.server}
+                  </p>
+                  <div className="grid grid-cols-3 gap-4">
+                    {result.tests?.map((test, j) => (
+                      <div 
+                        key={j}
+                        className="p-3 rounded-lg"
+                        style={{ 
+                          backgroundColor: test.success ? colors.successSoft : colors.errorSoft 
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          {test.success ? (
+                            <CheckCircle size={16} style={{ color: colors.success }} />
+                          ) : (
+                            <XCircle size={16} style={{ color: colors.error }} />
+                          )}
+                          <span className="font-medium">{test.target}</span>
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                          Status: {test.status}
+                          {test.error && ` - ${test.error.slice(0, 40)}...`}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Info Box */}
+        <div 
+          className="rounded-2xl p-6"
+          style={{ backgroundColor: colors.accentSoft }}
+        >
+          <h4 className="font-medium mb-2" style={{ color: colors.accent }}>
+            How Proxy Failover Works
+          </h4>
+          <ul className="text-sm space-y-1" style={{ color: colors.text }}>
+            <li>• Proxies are used in priority order (1 = highest)</li>
+            <li>• If primary proxy fails, system automatically switches to next</li>
+            <li>• Binance and Bybit require proxy due to IP restrictions</li>
+            <li>• CryptoRank parser also uses configured proxies</li>
+          </ul>
+        </div>
+      </div>
+    );
+  };
+
   // Main content router
   const renderContent = () => {
     switch (activeTab) {
@@ -1046,6 +1431,7 @@ function App() {
       case 'discovery': return renderDiscovery();
       case 'developer': return renderDeveloper();
       case 'api': return renderApiDocs();
+      case 'admin': return renderAdmin();
       default: return renderDashboard();
     }
   };
