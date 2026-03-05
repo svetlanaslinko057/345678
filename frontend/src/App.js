@@ -1540,7 +1540,9 @@ function App() {
         <header className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold capitalize" style={{ color: colors.text }}>
-              {activeTab === 'api' ? 'API Documentation' : activeTab === 'feed' ? 'Intel Feed' : activeTab}
+              {activeTab === 'api' ? 'API Documentation' : 
+               activeTab === 'feed' ? 'Intel Feed' : 
+               activeTab === 'admin' ? 'Proxy Admin' : activeTab}
             </h1>
             <p style={{ color: colors.textSecondary }}>
               {activeTab === 'dashboard' && 'System overview and metrics'}
