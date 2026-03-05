@@ -103,11 +103,13 @@ app.include_router(unlocks_router)
 from modules.intel import intel_router, admin_router, engine_router
 from modules.intel.api.routes_entity import router as entity_router
 from modules.intel.api.routes_docs import router as docs_router
+from modules.intel.api.routes_public import router as public_router
 app.include_router(intel_router)
 app.include_router(admin_router)
 app.include_router(engine_router)
 app.include_router(entity_router)
 app.include_router(docs_router)
+app.include_router(public_router)
 
 # ═══════════════════════════════════════════════════════════════
 # CORS & MIDDLEWARE
