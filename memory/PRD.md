@@ -112,7 +112,33 @@
 4. Add user authentication
 5. Build alert notification system
 
+## Session 2: CryptoRank Ingest (March 5, 2026)
+
+### Completed Tasks:
+1. ✅ **Playwright Discovery** - установлен, обнаружено 8 API endpoints CryptoRank
+2. ✅ **Funding Sync** - 23 funding rounds через API (fundraising-digest, hot-rounds)
+3. ✅ **Investors Sync** - 130 инвесторов (funds/table, top-investors)
+4. ✅ **Unlocks Sync** - 15 token unlocks (curated data)
+5. ✅ **Intel Feed** - заполнен реальными данными, работает на фронтенде
+
+### CryptoRank Ingest Architecture:
+```
+Discovery (Playwright) → endpoints/cryptorank_endpoints.json
+     ↓
+Sync (httpx replay) → output/cryptorank_*.json
+     ↓
+Ingest (parsers) → MongoDB (intel_fundraising, intel_investors, intel_unlocks)
+     ↓
+API (routes.py) → /api/intel/curated/* → Frontend
+```
+
+### API Endpoints Fixed:
+- `/api/intel/curated/funding` - теперь читает из intel_fundraising
+- `/api/intel/curated/unlocks` - исправлена фильтрация по дате
+- `/api/intel/curated/activity` - исправлена сортировка mixed types
+
 ## Test Results (March 5, 2026)
 - Backend: 100% (20/20 tests passed)
 - Frontend: 100% (all UI components working)
 - Integration: 100% (seamless communication)
+- CryptoRank Ingest: ✅ Working
