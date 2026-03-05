@@ -1,130 +1,214 @@
 {
-  "timestamp": "2026-03-05T14:37:46.000018",
-  "total_tests": 20,
-  "passed_tests": 20,
-  "failed_tests": 0,
-  "success_rate": 100.0,
+  "timestamp": "2026-03-05T15:15:49.117171",
+  "total_tests": 33,
+  "passed_tests": 32,
+  "failed_tests": 1,
+  "success_rate": 96.96969696969697,
   "results": [
     {
       "test": "Backend Health Check",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:42.148428"
+      "timestamp": "2026-03-05T15:15:43.718062"
     },
     {
       "test": "Health Response Structure",
       "success": true,
       "details": "ok:true found",
-      "timestamp": "2026-03-05T14:37:42.148910"
+      "timestamp": "2026-03-05T15:15:43.718617"
     },
     {
       "test": "Exchange Providers Health",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:42.636690"
+      "timestamp": "2026-03-05T15:15:44.278446"
     },
     {
       "test": "HyperLiquid Health",
       "success": true,
       "details": "Provider is healthy",
-      "timestamp": "2026-03-05T14:37:42.637252"
+      "timestamp": "2026-03-05T15:15:44.279185"
     },
     {
       "test": "Coinbase Health",
       "success": true,
       "details": "Provider is healthy",
-      "timestamp": "2026-03-05T14:37:42.637259"
+      "timestamp": "2026-03-05T15:15:44.279196"
     },
     {
       "test": "HyperLiquid BTC Ticker",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:44.032715"
+      "timestamp": "2026-03-05T15:15:45.121574"
     },
     {
       "test": "HyperLiquid Ticker Data",
       "success": true,
-      "details": "Price: 72580.0",
-      "timestamp": "2026-03-05T14:37:44.033275"
+      "details": "Price: 71812.0",
+      "timestamp": "2026-03-05T15:15:45.122187"
     },
     {
       "test": "Coinbase BTC-USD Ticker",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:44.323398"
+      "timestamp": "2026-03-05T15:15:45.420365"
     },
     {
       "test": "Coinbase Ticker Data",
       "success": true,
-      "details": "Price: 72627.77",
-      "timestamp": "2026-03-05T14:37:44.323997"
+      "details": "Price: 71850.6",
+      "timestamp": "2026-03-05T15:15:45.420992"
     },
     {
       "test": "ETH Price Aggregation",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:45.484761"
+      "timestamp": "2026-03-05T15:15:46.545376"
     },
     {
       "test": "Price Aggregation Data",
       "success": true,
-      "details": "Found 2 venue prices, avg: 2122.9",
-      "timestamp": "2026-03-05T14:37:45.485331"
+      "details": "Found 2 venue prices, avg: 2090.8199999999997",
+      "timestamp": "2026-03-05T15:15:46.545995"
     },
     {
       "test": "Intel Statistics",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:45.608102"
+      "timestamp": "2026-03-05T15:15:46.657532"
     },
     {
       "test": "Intel Collections Data",
       "success": true,
-      "details": "Collections: 7 types, investors: 8, unlocks: 6, fundraising: 8, projects: 100, activity: 15, launchpads: 0, categories: 675",
-      "timestamp": "2026-03-05T14:37:45.608681"
+      "details": "Collections: 7 types, investors: 130, unlocks: 15, fundraising: 9, projects: 100, activity: 15, launchpads: 0, categories: 675",
+      "timestamp": "2026-03-05T15:15:46.658133"
     },
     {
       "test": "Intel Curated Activity",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:45.756040"
+      "timestamp": "2026-03-05T15:15:46.812455"
     },
     {
       "test": "Activity Feed Data",
       "success": true,
-      "details": "Found 14 activity items",
-      "timestamp": "2026-03-05T14:37:45.756633"
+      "details": "Found 19 activity items",
+      "timestamp": "2026-03-05T15:15:46.813236"
     },
     {
       "test": "Activity Item Structure",
       "success": true,
       "details": "Type: unlock",
-      "timestamp": "2026-03-05T14:37:45.756643"
+      "timestamp": "2026-03-05T15:15:46.813246"
     },
     {
       "test": "Intel Investors",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:45.882842"
+      "timestamp": "2026-03-05T15:15:46.964115"
     },
     {
       "test": "Investors Data",
       "success": true,
-      "details": "Found 8 items, total: 8",
-      "timestamp": "2026-03-05T14:37:45.883337"
+      "details": "Found 100 items, total: 130",
+      "timestamp": "2026-03-05T15:15:46.964733"
     },
     {
       "test": "Intel Unlocks",
       "success": true,
       "details": "Status: 200",
-      "timestamp": "2026-03-05T14:37:45.999173"
+      "timestamp": "2026-03-05T15:15:47.126134"
     },
     {
       "test": "Unlocks Data",
       "success": true,
-      "details": "Found 6 unlock events",
-      "timestamp": "2026-03-05T14:37:45.999767"
+      "details": "Found 15 unlock events",
+      "timestamp": "2026-03-05T15:15:47.126741"
+    },
+    {
+      "test": "Proxy Status",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.315853"
+    },
+    {
+      "test": "Proxy Configuration",
+      "success": true,
+      "details": "Configured: False, Total: 0, Enabled: 0",
+      "timestamp": "2026-03-05T15:15:48.316434"
+    },
+    {
+      "test": "Add Test Proxy",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.414788"
+    },
+    {
+      "test": "Proxy Creation",
+      "success": true,
+      "details": "Created proxy ID: 1",
+      "timestamp": "2026-03-05T15:15:48.415423"
+    },
+    {
+      "test": "Disable Proxy",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.573451"
+    },
+    {
+      "test": "Enable Proxy",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.754482"
+    },
+    {
+      "test": "Test Proxy Connectivity",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.884886"
+    },
+    {
+      "test": "Proxy Test Results",
+      "success": true,
+      "details": "Tested 1 proxies",
+      "timestamp": "2026-03-05T15:15:48.885450"
+    },
+    {
+      "test": "Proxy 1 Tests",
+      "success": true,
+      "details": "0/3 tests passed",
+      "timestamp": "2026-03-05T15:15:48.885460"
+    },
+    {
+      "test": "Remove Test Proxy",
+      "success": false,
+      "details": "Unsupported method: DELETE",
+      "timestamp": "2026-03-05T15:15:48.885471"
+    },
+    {
+      "test": "Proxy Status",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:48.995699"
+    },
+    {
+      "test": "Proxy Configuration",
+      "success": true,
+      "details": "Configured: True, Total: 1, Enabled: 1",
+      "timestamp": "2026-03-05T15:15:48.996287"
+    },
+    {
+      "test": "Clear All Proxies",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2026-03-05T15:15:49.114720"
     }
   ],
-  "failures": []
+  "failures": [
+    {
+      "test": "Remove Test Proxy",
+      "error": "Unsupported method: DELETE",
+      "response": null
+    }
+  ]
 }
