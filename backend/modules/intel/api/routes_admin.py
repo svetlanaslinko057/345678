@@ -148,16 +148,15 @@ async def run_bootstrap(db=Depends(get_db)):
     
     # Seed API Docs
     try:
-        from modules.intel.api.documentation_registry import get_registry
-        registry = get_registry()
-        for endpoint in registry:
+        from modules.intel.api.documentation_registry import API_DOCUMENTATION
+        for endpoint in API_DOCUMENTATION:
             doc = endpoint.to_mongodb_doc()
             await db.intel_docs.update_one(
                 {"endpoint_id": doc["endpoint_id"]},
                 {"$set": doc},
                 upsert=True
             )
-        results["api_docs"] = len(registry)
+        results["api_docs"] = len(API_DOCUMENTATION)
     except Exception as e:
         results["api_docs"] = f"error: {str(e)}"
     
