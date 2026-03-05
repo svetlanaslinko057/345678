@@ -397,14 +397,16 @@ class ProxyManager:
         self._next_id = 1
         await self.add_proxy(server, username, password, priority=1)
     
-    def clear_proxy(self):
+    async def clear_proxy(self):
         """Clear all proxies"""
         self._proxies = []
+        # Save to database
+        await self.save_to_db()
         logger.info("[Proxy] All proxies cleared")
     
-    def clear_all(self):
+    async def clear_all(self):
         """Clear all proxies - alias for clear_proxy"""
-        self.clear_proxy()
+        await self.clear_proxy()
     
     async def test_proxy(self, proxy_id: int = None) -> Dict[str, Any]:
         """Test proxy connectivity"""
