@@ -34,6 +34,11 @@ class BybitAdapter(MarketDataProvider):
         self._healthy = True
         self._last_latency: Optional[float] = None
         self._last_error: Optional[str] = None
+        self._proxy: Optional[str] = None
+    
+    def set_proxy(self, proxy_url: Optional[str]):
+        """Set proxy for requests"""
+        self._proxy = proxy_url
     
     @property
     def venue(self) -> Venue:
@@ -69,7 +74,17 @@ class BybitAdapter(MarketDataProvider):
     async def _request(self, endpoint: str, params: dict = None) -> dict:
         """Выполняет HTTP запрос к Bybit API"""
         start = time.time()
-        async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
+        
+        # Get proxy from global manager if not set locally
+        proxy = self._proxy
+        if not proxy:
+            try:
+                from modules.intel.common.proxy_manager import proxy_manager
+                proxy = proxy_manager.get_httpx_proxy()
+            except:
+                pass
+        
+        async with httpx.AsyncClient(timeout=self.TIMEOUT, proxy=proxy) as client:
             try:
                 res = await client.get(f"{self.BASE_URL}{endpoint}", params=params)
                 res.raise_for_status()
