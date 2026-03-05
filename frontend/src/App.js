@@ -4,7 +4,8 @@ import {
   TrendingUp, Users, Calendar, Layers, Globe, 
   ChevronRight, RefreshCw, ExternalLink, Clock,
   Zap, Target, Shield, Server, Terminal, FileText,
-  DollarSign, Unlock, LineChart, Box, Rss, Radio
+  DollarSign, Unlock, LineChart, Box, Rss, Radio,
+  Network, Plus, Trash2, CheckCircle, XCircle, Play, Wifi
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
