@@ -161,9 +161,68 @@ API (routes.py) → /api/intel/curated/* → Frontend
 - Proxy list with status, success/error counts
 - Test/Enable/Disable/Remove buttons per proxy
 
+## Session 4: API Architecture & Proxy (March 5, 2026)
+
+### Completed:
+1. ✅ **Custom Proxy Dropdown** - стилизованный выпадающий список для Type (HTTP/HTTPS/SOCKS5)
+2. ✅ **Public API v1** - полная архитектура по 11 сущностям
+3. ✅ **API Documentation** - 41 endpoint с EN/RU локализацией
+
+### Public API Endpoints (/api/v1/):
+```
+/global/stats         - Глобальная статистика
+/global/trending      - Трендовые проекты
+/global/feed          - Лента активности
+
+/projects             - Список проектов
+/projects/{project}   - Детали проекта
+/projects/{project}/exchanges    - Биржи проекта
+/projects/{project}/fundraising  - Раунды финансирования
+/projects/{project}/unlocks      - Анлоки
+/projects/{project}/investors    - Инвесторы
+
+/funds                - Список фондов
+/funds/{fund}         - Детали фонда
+/funds/{fund}/portfolio    - Портфель фонда
+/funds/{fund}/investments  - История инвестиций
+
+/persons              - Список персон
+/persons/{person}     - Детали персоны
+
+/fundraising          - Раунды финансирования
+/fundraising/recent   - Недавние раунды
+/fundraising/top      - Топ раунды
+
+/unlocks              - Анлоки токенов
+/unlocks/upcoming     - Предстоящие анлоки
+
+/ico                  - ICO / Token Sales
+/ico/upcoming         - Предстоящие ICO
+
+/exchanges            - Список бирж
+/exchanges/{exchange} - Детали биржи
+
+/search?q=            - Универсальный поиск
+```
+
+### API Categories (15):
+1. Global Stats / Глобальная статистика
+2. Projects / Проекты
+3. Funds / VCs / Фонды
+4. Persons / Персоны
+5. Fundraising / Финансирование
+6. Token Unlocks / Анлоки токенов
+7. ICO / Token Sales / Продажи токенов
+8. Exchanges / Биржи
+9. Search / Поиск
+10. Entity Intelligence / Интеллект сущностей
+11. Query Engine / Движок запросов
+12. Event Correlation / Корреляция событий
+13. Source Trust / Доверие источников
+14. Exchange Data / Биржевые данные
+15. System / Система
+
 ## Test Results (March 5, 2026)
-- Backend: 100% (33/33 tests passed)
+- Backend: 100% (all API endpoints working)
 - Frontend: 100% (All UI components working)
-- Integration: 100%
-- CryptoRank Ingest: ✅ Working
-- Proxy Admin: ✅ Working
+- API Docs: 41 endpoints documented (EN/RU)
