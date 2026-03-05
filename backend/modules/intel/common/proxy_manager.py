@@ -338,7 +338,7 @@ class ProxyManager:
             for name, url in test_urls:
                 try:
                     async with httpx.AsyncClient(
-                        proxies=proxy.httpx_format,
+                        proxy=proxy.httpx_format,
                         timeout=15
                     ) as client:
                         resp = await client.get(url)
