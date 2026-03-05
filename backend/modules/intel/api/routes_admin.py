@@ -1091,3 +1091,310 @@ async def get_source_reliability(db = Depends(get_db)):
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
         "sources": {k: v.to_dict() for k, v in reliability.items()}
     }
+
+
+# ═══════════════════════════════════════════════════════════════
+# CRYPTORANK INGEST - Funding/Unlocks/Investors
+# ═══════════════════════════════════════════════════════════════
+
+def get_cryptorank_sync():
+    """Dependency to get CryptoRank sync service"""
+    from server import db
+    from modules.intel.sources.cryptorank.sync import CryptoRankSync
+    return CryptoRankSync(db)
+
+
+@router.post("/cryptorank/ingest/funding")
+async def ingest_cryptorank_funding(
+    request: Request,
+    sync = Depends(get_cryptorank_sync)
+):
+    """
+    Ingest funding rounds from CryptoRank.
+    
+    Body: CryptoRank API response ({"total": N, "data": [...]})
+    or raw list of funding records
+    """
+    data = await request.json()
+    result = await sync.ingest_funding(data)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": "funding",
+        **result
+    }
+
+
+@router.post("/cryptorank/ingest/investors")
+async def ingest_cryptorank_investors(
+    request: Request,
+    sync = Depends(get_cryptorank_sync)
+):
+    """
+    Ingest investors from CryptoRank.
+    
+    Body: List of investor records
+    """
+    data = await request.json()
+    result = await sync.ingest_investors(data)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": "investors",
+        **result
+    }
+
+
+@router.post("/cryptorank/ingest/unlocks")
+async def ingest_cryptorank_unlocks(
+    request: Request,
+    unlock_type: str = Query("vesting", description="Type: vesting or tge"),
+    sync = Depends(get_cryptorank_sync)
+):
+    """
+    Ingest token unlocks from CryptoRank.
+    
+    Body: List of unlock records
+    Query: unlock_type=vesting|tge
+    """
+    data = await request.json()
+    result = await sync.ingest_unlocks(data, unlock_type)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": f"unlocks_{unlock_type}",
+        **result
+    }
+
+
+@router.post("/cryptorank/ingest/all")
+async def ingest_cryptorank_all(
+    request: Request,
+    sync = Depends(get_cryptorank_sync)
+):
+    """
+    Ingest all CryptoRank data at once.
+    
+    Body: {
+        "funding": {...},
+        "investors": [...],
+        "unlocks": [...],
+        "tge_unlocks": [...],
+        "categories": [...],
+        "launchpads": [...],
+        "market": {...}
+    }
+    """
+    data = await request.json()
+    result = await sync.ingest_all(data)
+    return result
+
+
+@router.get("/cryptorank/stats")
+async def get_cryptorank_stats(sync = Depends(get_cryptorank_sync)):
+    """Get CryptoRank sync statistics"""
+    return await sync.get_sync_stats()
+
+
+@router.post("/cryptorank/fetch/funding")
+async def fetch_and_ingest_funding(
+    limit: int = Query(100, description="Number of records to fetch"),
+    offset: int = Query(0, description="Offset for pagination"),
+    db = Depends(get_db)
+):
+    """
+    Fetch funding rounds directly from CryptoRank API and ingest.
+    
+    Scrapes: https://api.cryptorank.io/v0/coins/funding-rounds
+    """
+    import aiohttp
+    from modules.intel.sources.cryptorank.sync import CryptoRankSync
+    
+    url = f"https://api.cryptorank.io/v0/coins/funding-rounds?limit={limit}&offset={offset}"
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=30) as resp:
+            if resp.status != 200:
+                return {"error": f"CryptoRank API returned {resp.status}"}
+            data = await resp.json()
+    
+    sync = CryptoRankSync(db)
+    result = await sync.ingest_funding(data)
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": "funding",
+        "api_total": data.get("total", 0),
+        **result
+    }
+
+
+@router.post("/cryptorank/fetch/unlocks")
+async def fetch_and_ingest_unlocks(
+    days: int = Query(30, description="Days ahead to fetch"),
+    db = Depends(get_db)
+):
+    """
+    Fetch upcoming token unlocks directly from CryptoRank API and ingest.
+    
+    Scrapes: https://api.cryptorank.io/v0/token-unlocks/unlocks
+    """
+    import aiohttp
+    from datetime import datetime, timedelta
+    from modules.intel.sources.cryptorank.sync import CryptoRankSync
+    
+    # Calculate date range
+    today = datetime.now().strftime("%Y-%m-%d")
+    end_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
+    
+    url = f"https://api.cryptorank.io/v0/token-unlocks/unlocks?dateFrom={today}&dateTo={end_date}"
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=30) as resp:
+            if resp.status != 200:
+                return {"error": f"CryptoRank API returned {resp.status}"}
+            data = await resp.json()
+    
+    sync = CryptoRankSync(db)
+    result = await sync.ingest_unlocks(data.get("data", data), "vesting")
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": "unlocks",
+        "date_range": f"{today} to {end_date}",
+        **result
+    }
+
+
+@router.post("/cryptorank/fetch/investors")
+async def fetch_and_ingest_investors(
+    limit: int = Query(100, description="Number of investors to fetch"),
+    db = Depends(get_db)
+):
+    """
+    Fetch top investors directly from CryptoRank API and ingest.
+    
+    Scrapes investor data from funding rounds
+    """
+    import aiohttp
+    from modules.intel.sources.cryptorank.sync import CryptoRankSync
+    from modules.intel.sources.cryptorank.parsers.investors import parse_investors_from_funding
+    
+    # Fetch funding rounds which contain investor data
+    url = f"https://api.cryptorank.io/v0/coins/funding-rounds?limit={limit}&offset=0"
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, timeout=30) as resp:
+            if resp.status != 200:
+                return {"error": f"CryptoRank API returned {resp.status}"}
+            data = await resp.json()
+    
+    # Extract unique investors from funding rounds
+    all_investors = []
+    seen = set()
+    
+    for funding in data.get("data", []):
+        for fund in funding.get("funds", []):
+            key = fund.get("key")
+            if key and key not in seen:
+                seen.add(key)
+                all_investors.append(fund)
+    
+    # Parse and ingest
+    sync = CryptoRankSync(db)
+    docs = parse_investors_from_funding(all_investors)
+    
+    collection = db.intel_investors
+    changed = 0
+    
+    from modules.intel.common.storage import upsert_with_diff
+    for doc in docs:
+        result = await upsert_with_diff(collection, doc)
+        if result['changed']:
+            changed += 1
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "entity": "investors",
+        "total": len(docs),
+        "changed": changed,
+        "from_funding_rounds": len(data.get("data", []))
+    }
+
+
+@router.post("/cryptorank/sync/all")
+async def sync_all_cryptorank(db = Depends(get_db)):
+    """
+    Full CryptoRank sync - funding, unlocks, investors.
+    
+    Fetches from CryptoRank API and ingests all data.
+    """
+    import aiohttp
+    from datetime import datetime as dt, timedelta
+    from modules.intel.sources.cryptorank.sync import CryptoRankSync
+    from modules.intel.sources.cryptorank.parsers.investors import parse_investors_from_funding
+    from modules.intel.common.storage import upsert_with_diff
+    
+    sync = CryptoRankSync(db)
+    results = {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "source": "cryptorank",
+        "synced": {}
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        # 1. Funding rounds (multiple pages)
+        try:
+            all_funding = []
+            for offset in range(0, 500, 100):
+                url = f"https://api.cryptorank.io/v0/coins/funding-rounds?limit=100&offset={offset}"
+                async with session.get(url, timeout=30) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        all_funding.extend(data.get("data", []))
+                        if len(data.get("data", [])) < 100:
+                            break
+            
+            if all_funding:
+                result = await sync.ingest_funding({"data": all_funding})
+                results["synced"]["funding"] = result
+                
+                # Extract investors from funding
+                all_investors = []
+                seen = set()
+                for funding in all_funding:
+                    for fund in funding.get("funds", []):
+                        key = fund.get("key")
+                        if key and key not in seen:
+                            seen.add(key)
+                            all_investors.append(fund)
+                
+                docs = parse_investors_from_funding(all_investors)
+                collection = db.intel_investors
+                changed = 0
+                for doc in docs:
+                    res = await upsert_with_diff(collection, doc)
+                    if res['changed']:
+                        changed += 1
+                results["synced"]["investors"] = {"total": len(docs), "changed": changed}
+        except Exception as e:
+            results["synced"]["funding"] = {"error": str(e)}
+        
+        # 2. Token unlocks
+        try:
+            today = dt.now().strftime("%Y-%m-%d")
+            end_date = (dt.now() + timedelta(days=90)).strftime("%Y-%m-%d")
+            url = f"https://api.cryptorank.io/v0/token-unlocks/unlocks?dateFrom={today}&dateTo={end_date}"
+            
+            async with session.get(url, timeout=30) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    result = await sync.ingest_unlocks(data.get("data", data), "vesting")
+                    results["synced"]["unlocks"] = result
+        except Exception as e:
+            results["synced"]["unlocks"] = {"error": str(e)}
+    
+    return results
