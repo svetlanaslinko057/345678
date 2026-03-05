@@ -1052,6 +1052,13 @@ function App() {
     priority: 1 
   });
   const [testResults, setTestResults] = useState(null);
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  
+  const proxyTypes = [
+    { value: 'http', label: 'HTTP' },
+    { value: 'https', label: 'HTTPS' },
+    { value: 'socks5', label: 'SOCKS5' },
+  ];
   
   const fetchProxyStatus = useCallback(async () => {
     try {
