@@ -304,7 +304,7 @@ class ProxyManager:
     # ADMIN API
     # ═══════════════════════════════════════════════════════════════
     
-    def add_proxy(self, server: str, username: str = None, password: str = None, priority: int = None) -> Dict:
+    async def add_proxy(self, server: str, username: str = None, password: str = None, priority: int = None) -> Dict:
         """Add new proxy"""
         if priority is None:
             priority = max([p.priority for p in self._proxies], default=0) + 1
@@ -318,6 +318,9 @@ class ProxyManager:
         )
         self._proxies.append(proxy)
         self._next_id += 1
+        
+        # Save to database
+        await self.save_to_db()
         
         logger.info(f"[Proxy] Added proxy {proxy.id}: {server}")
         return {"id": proxy.id, "priority": priority}
