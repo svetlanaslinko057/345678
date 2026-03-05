@@ -302,7 +302,7 @@ def main():
                 "success_rate": (tester.tests_passed/tester.tests_run*100) if tester.tests_run > 0 else 0,
                 "results": tester.results,
                 "failures": tester.failed_tests
-            }, indent=2)
+            }, f, indent=2)
         
         print(f"\n📄 Results saved to: {results_file}")
         
