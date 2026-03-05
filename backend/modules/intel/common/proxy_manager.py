@@ -325,9 +325,13 @@ class ProxyManager:
         logger.info(f"[Proxy] Added proxy {proxy.id}: {server}")
         return {"id": proxy.id, "priority": priority}
     
-    def remove_proxy(self, proxy_id: int) -> Dict:
+    async def remove_proxy(self, proxy_id: int) -> Dict:
         """Remove proxy by ID"""
         self._proxies = [p for p in self._proxies if p.id != proxy_id]
+        
+        # Save to database
+        await self.save_to_db()
+        
         logger.info(f"[Proxy] Removed proxy {proxy_id}")
         return {"removed": proxy_id}
     
