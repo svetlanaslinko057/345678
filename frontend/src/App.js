@@ -1512,6 +1512,17 @@ function App() {
             active={activeTab === 'api'}
             onClick={() => setActiveTab('api')}
           />
+          
+          <p className="text-xs font-medium uppercase tracking-wider mt-6 mb-3 px-4"
+             style={{ color: colors.textMuted }}>
+            System
+          </p>
+          <NavItem 
+            icon={Network} 
+            label="Proxy Admin" 
+            active={activeTab === 'admin'}
+            onClick={() => setActiveTab('admin')}
+          />
         </nav>
 
         {/* Version */}
