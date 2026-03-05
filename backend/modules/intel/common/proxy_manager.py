@@ -290,6 +290,81 @@ class ProxyManager:
     def get_list(self) -> List[Dict]:
         """Get proxy list for admin"""
         return self.get_status()["proxies"]
+    
+    def set_proxy(self, server: str, username: str = None, password: str = None):
+        """Set single proxy (legacy method - clears all and adds one)"""
+        self._proxies = []
+        self._next_id = 1
+        self.add_proxy(server, username, password, priority=1)
+    
+    def clear_proxy(self):
+        """Clear all proxies"""
+        self._proxies = []
+        logger.info("[Proxy] All proxies cleared")
+    
+    def clear_all(self):
+        """Clear all proxies - alias for clear_proxy"""
+        self.clear_proxy()
+    
+    async def test_proxy(self, proxy_id: int = None) -> Dict[str, Any]:
+        """Test proxy connectivity"""
+        import httpx
+        
+        test_urls = [
+            ("Binance", "https://fapi.binance.com/fapi/v1/time"),
+            ("Bybit", "https://api.bybit.com/v5/market/time"),
+            ("Generic", "https://httpbin.org/ip"),
+        ]
+        
+        if proxy_id:
+            proxy = next((p for p in self._proxies if p.id == proxy_id), None)
+            if not proxy:
+                return {"error": f"Proxy {proxy_id} not found"}
+            proxies_to_test = [proxy]
+        else:
+            proxies_to_test = self._get_sorted_proxies()
+        
+        if not proxies_to_test:
+            return {"error": "No proxies configured"}
+        
+        results = []
+        for proxy in proxies_to_test:
+            proxy_result = {
+                "id": proxy.id,
+                "server": proxy.server,
+                "tests": []
+            }
+            
+            for name, url in test_urls:
+                try:
+                    async with httpx.AsyncClient(
+                        proxies=proxy.httpx_format,
+                        timeout=15
+                    ) as client:
+                        resp = await client.get(url)
+                        proxy_result["tests"].append({
+                            "target": name,
+                            "url": url,
+                            "status": resp.status_code,
+                            "success": resp.status_code == 200
+                        })
+                        if resp.status_code == 200:
+                            proxy.success_count += 1
+                            proxy.last_success = datetime.now(timezone.utc)
+                except Exception as e:
+                    proxy.error_count += 1
+                    proxy.last_error = str(e)
+                    proxy_result["tests"].append({
+                        "target": name,
+                        "url": url,
+                        "status": 0,
+                        "success": False,
+                        "error": str(e)[:100]
+                    })
+            
+            results.append(proxy_result)
+        
+        return {"results": results}
 
 
 # Singleton instance
