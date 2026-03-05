@@ -1902,23 +1902,25 @@ async def get_curated_funding(
     db = Depends(get_db)
 ):
     """Get curated funding rounds (deduplicated, multi-source)"""
-    cutoff = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
-    
-    query = {
-        "round_date": {"$gte": cutoff}
-    }
+    query = {}
     
     if symbol:
         query["symbol"] = symbol.upper()
     
     if round_type:
-        query["round_type"] = round_type.lower()
+        query["round"] = {"$regex": round_type, "$options": "i"}
     
     if min_usd:
-        query["raised_usd"] = {"$gte": min_usd}
+        query["raise_usd"] = {"$gte": min_usd}
     
-    cursor = db.intel_funding.find(query, {"_id": 0})
-    items = await cursor.sort("round_date", -1).limit(limit).to_list(limit)
+    # Try intel_fundraising first (our main collection)
+    cursor = db.intel_fundraising.find(query, {"_id": 0})
+    items = await cursor.sort("date", -1).limit(limit).to_list(limit)
+    
+    # Fallback to intel_funding if empty
+    if not items:
+        cursor = db.intel_funding.find(query, {"_id": 0})
+        items = await cursor.sort("round_date", -1).limit(limit).to_list(limit)
     
     return {
         "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
