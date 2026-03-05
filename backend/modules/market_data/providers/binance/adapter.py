@@ -494,7 +494,17 @@ class BinanceAdapter(MarketDataProvider):
     async def health_check(self) -> dict:
         try:
             start = time.time()
-            async with httpx.AsyncClient(timeout=5) as client:
+            
+            # Get proxy
+            proxy = self._proxy
+            if not proxy:
+                try:
+                    from modules.intel.common.proxy_manager import proxy_manager
+                    proxy = proxy_manager.get_httpx_proxy()
+                except:
+                    pass
+            
+            async with httpx.AsyncClient(timeout=5, proxy=proxy) as client:
                 await client.get(f"{self.BASE_URL}/fapi/v1/ping")
             latency = (time.time() - start) * 1000
             
@@ -502,14 +512,16 @@ class BinanceAdapter(MarketDataProvider):
                 "venue": self.venue.value,
                 "healthy": True,
                 "latency_ms": latency,
-                "error": None
+                "error": None,
+                "using_proxy": bool(proxy)
             }
         except Exception as e:
             return {
                 "venue": self.venue.value,
                 "healthy": False,
                 "latency_ms": None,
-                "error": str(e)
+                "error": str(e),
+                "using_proxy": bool(self._proxy)
             }
 
 
