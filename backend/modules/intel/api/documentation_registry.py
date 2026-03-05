@@ -770,6 +770,570 @@ API_DOCUMENTATION: List[ApiEndpoint] = [
             )
         ]
     ),
+    
+    # ───────────────────────────────────────────────────────────
+    # GLOBAL API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="global_stats",
+        path="/api/v1/global/stats",
+        method=HttpMethod.GET,
+        title_en="Global Market Statistics",
+        title_ru="Глобальная статистика рынка",
+        description_en="Get global market statistics: total projects, funds, upcoming unlocks, recent funding rounds.",
+        description_ru="Получить глобальную статистику рынка: всего проектов, фондов, предстоящих анлоков, недавних раундов.",
+        category="global",
+        tags=["global", "stats", "market"],
+        parameters=[],
+        responses=[
+            ApiResponse(
+                status_code=200,
+                description_en="Global statistics",
+                description_ru="Глобальная статистика",
+                example={
+                    "ts": 1772717367700,
+                    "data": {
+                        "total_projects": 7362,
+                        "total_funds": 130,
+                        "upcoming_unlocks": 15,
+                        "recent_funding_rounds": 23
+                    }
+                }
+            )
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="global_trending",
+        path="/api/v1/global/trending",
+        method=HttpMethod.GET,
+        title_en="Trending Projects",
+        title_ru="Трендовые проекты",
+        description_en="Get trending projects based on recent funding, upcoming unlocks, and trading volume.",
+        description_ru="Получить трендовые проекты на основе недавнего финансирования, предстоящих анлоков и объёма торгов.",
+        category="global",
+        tags=["global", "trending", "hot"],
+        parameters=[
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=20)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Trending projects", description_ru="Трендовые проекты")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="global_feed",
+        path="/api/v1/global/feed",
+        method=HttpMethod.GET,
+        title_en="Global Activity Feed",
+        title_ru="Глобальная лента активности",
+        description_en="Combined activity feed: funding rounds, token unlocks, listings, ICO events.",
+        description_ru="Комбинированная лента активности: раунды финансирования, анлоки токенов, листинги, ICO.",
+        category="global",
+        tags=["global", "feed", "activity"],
+        parameters=[
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=50),
+            ApiParameter(name="event_type", type="string", required=False, location="query",
+                        description_en="Filter: funding, unlock, listing, ico", description_ru="Фильтр: funding, unlock, listing, ico")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Activity feed", description_ru="Лента активности")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # PROJECTS API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="projects_list",
+        path="/api/v1/projects",
+        method=HttpMethod.GET,
+        title_en="List All Projects",
+        title_ru="Список всех проектов",
+        description_en="Get list of all projects (tokens + ecosystems). Supports filtering by category and chain.",
+        description_ru="Получить список всех проектов (токены + экосистемы). Поддерживает фильтрацию по категории и сети.",
+        category="projects",
+        tags=["projects", "tokens", "list"],
+        parameters=[
+            ApiParameter(name="category", type="string", required=False, location="query",
+                        description_en="Filter by category", description_ru="Фильтр по категории"),
+            ApiParameter(name="chain", type="string", required=False, location="query",
+                        description_en="Filter by blockchain", description_ru="Фильтр по блокчейну"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100),
+            ApiParameter(name="offset", type="integer", required=False, location="query",
+                        description_en="Offset for pagination", description_ru="Смещение для пагинации", default=0)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="List of projects", description_ru="Список проектов",
+                       example={"ts": 1772717367700, "total": 7362, "data": []})
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="project_get",
+        path="/api/v1/projects/{project}",
+        method=HttpMethod.GET,
+        title_en="Get Project Details",
+        title_ru="Получить детали проекта",
+        description_en="Get full project information by slug, symbol, or key.",
+        description_ru="Получить полную информацию о проекте по slug, символу или ключу.",
+        category="projects",
+        tags=["projects", "details"],
+        parameters=[
+            ApiParameter(name="project", type="string", required=True, location="path",
+                        description_en="Project identifier (slug, symbol, key)", description_ru="Идентификатор проекта",
+                        example="ethereum")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Project details", description_ru="Детали проекта"),
+            ApiResponse(status_code=404, description_en="Project not found", description_ru="Проект не найден")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="project_exchanges",
+        path="/api/v1/projects/{project}/exchanges",
+        method=HttpMethod.GET,
+        title_en="Get Project Exchanges",
+        title_ru="Получить биржи проекта",
+        description_en="Get list of exchanges where project is traded (spot/perp).",
+        description_ru="Получить список бирж, где торгуется проект (spot/perp).",
+        category="projects",
+        tags=["projects", "exchanges", "trading"],
+        parameters=[
+            ApiParameter(name="project", type="string", required=True, location="path",
+                        description_en="Project identifier", description_ru="Идентификатор проекта")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Exchange listings", description_ru="Листинги на биржах",
+                       example={"project": "ethereum", "data": [{"exchange": "Binance", "pair": "ETH/USDT"}]})
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="project_fundraising",
+        path="/api/v1/projects/{project}/fundraising",
+        method=HttpMethod.GET,
+        title_en="Get Project Fundraising",
+        title_ru="Получить раунды финансирования проекта",
+        description_en="Get all funding rounds for the project.",
+        description_ru="Получить все раунды финансирования проекта.",
+        category="projects",
+        tags=["projects", "fundraising", "funding"],
+        parameters=[
+            ApiParameter(name="project", type="string", required=True, location="path",
+                        description_en="Project identifier", description_ru="Идентификатор проекта")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Funding rounds", description_ru="Раунды финансирования")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="project_unlocks",
+        path="/api/v1/projects/{project}/unlocks",
+        method=HttpMethod.GET,
+        title_en="Get Project Unlocks",
+        title_ru="Получить анлоки проекта",
+        description_en="Get token unlock schedule for the project.",
+        description_ru="Получить расписание разблокировки токенов проекта.",
+        category="projects",
+        tags=["projects", "unlocks", "vesting"],
+        parameters=[
+            ApiParameter(name="project", type="string", required=True, location="path",
+                        description_en="Project identifier", description_ru="Идентификатор проекта")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Unlock schedule", description_ru="Расписание анлоков")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="project_investors",
+        path="/api/v1/projects/{project}/investors",
+        method=HttpMethod.GET,
+        title_en="Get Project Investors",
+        title_ru="Получить инвесторов проекта",
+        description_en="Get investors who funded this project.",
+        description_ru="Получить инвесторов, финансировавших проект.",
+        category="projects",
+        tags=["projects", "investors", "vc"],
+        parameters=[
+            ApiParameter(name="project", type="string", required=True, location="path",
+                        description_en="Project identifier", description_ru="Идентификатор проекта")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Investors list", description_ru="Список инвесторов")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # FUNDS API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="funds_list",
+        path="/api/v1/funds",
+        method=HttpMethod.GET,
+        title_en="List All Funds",
+        title_ru="Список всех фондов",
+        description_en="Get list of all VC funds and investors.",
+        description_ru="Получить список всех венчурных фондов и инвесторов.",
+        category="funds",
+        tags=["funds", "vc", "investors"],
+        parameters=[
+            ApiParameter(name="tier", type="string", required=False, location="query",
+                        description_en="Filter by tier: 1, 2, 3", description_ru="Фильтр по уровню: 1, 2, 3"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Funds list", description_ru="Список фондов")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="fund_get",
+        path="/api/v1/funds/{fund}",
+        method=HttpMethod.GET,
+        title_en="Get Fund Details",
+        title_ru="Получить детали фонда",
+        description_en="Get detailed information about a fund.",
+        description_ru="Получить подробную информацию о фонде.",
+        category="funds",
+        tags=["funds", "details"],
+        parameters=[
+            ApiParameter(name="fund", type="string", required=True, location="path",
+                        description_en="Fund identifier (slug or name)", description_ru="Идентификатор фонда",
+                        example="a16z")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Fund details", description_ru="Детали фонда"),
+            ApiResponse(status_code=404, description_en="Fund not found", description_ru="Фонд не найден")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="fund_portfolio",
+        path="/api/v1/funds/{fund}/portfolio",
+        method=HttpMethod.GET,
+        title_en="Get Fund Portfolio",
+        title_ru="Получить портфель фонда",
+        description_en="Get all projects in fund's portfolio.",
+        description_ru="Получить все проекты в портфеле фонда.",
+        category="funds",
+        tags=["funds", "portfolio"],
+        parameters=[
+            ApiParameter(name="fund", type="string", required=True, location="path",
+                        description_en="Fund identifier", description_ru="Идентификатор фонда")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Portfolio projects", description_ru="Проекты в портфеле")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="fund_investments",
+        path="/api/v1/funds/{fund}/investments",
+        method=HttpMethod.GET,
+        title_en="Get Fund Investments",
+        title_ru="Получить инвестиции фонда",
+        description_en="Get investment history for the fund.",
+        description_ru="Получить историю инвестиций фонда.",
+        category="funds",
+        tags=["funds", "investments", "history"],
+        parameters=[
+            ApiParameter(name="fund", type="string", required=True, location="path",
+                        description_en="Fund identifier", description_ru="Идентификатор фонда")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Investment history", description_ru="История инвестиций")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # PERSONS API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="persons_list",
+        path="/api/v1/persons",
+        method=HttpMethod.GET,
+        title_en="List Notable Persons",
+        title_ru="Список известных персон",
+        description_en="Get list of notable persons in crypto: founders, investors, advisors.",
+        description_ru="Получить список известных персон в крипто: основатели, инвесторы, советники.",
+        category="persons",
+        tags=["persons", "people", "team"],
+        parameters=[
+            ApiParameter(name="role", type="string", required=False, location="query",
+                        description_en="Filter by role: founder, investor, advisor", description_ru="Фильтр по роли"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Persons list", description_ru="Список персон")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="person_get",
+        path="/api/v1/persons/{person}",
+        method=HttpMethod.GET,
+        title_en="Get Person Details",
+        title_ru="Получить детали персоны",
+        description_en="Get detailed information about a person.",
+        description_ru="Получить подробную информацию о персоне.",
+        category="persons",
+        tags=["persons", "details"],
+        parameters=[
+            ApiParameter(name="person", type="string", required=True, location="path",
+                        description_en="Person identifier (slug or name)", description_ru="Идентификатор персоны",
+                        example="vitalik-buterin")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Person details", description_ru="Детали персоны"),
+            ApiResponse(status_code=404, description_en="Person not found", description_ru="Персона не найдена")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # FUNDRAISING API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="fundraising_list",
+        path="/api/v1/fundraising",
+        method=HttpMethod.GET,
+        title_en="List Fundraising Rounds",
+        title_ru="Список раундов финансирования",
+        description_en="Get all fundraising rounds with filters.",
+        description_ru="Получить все раунды финансирования с фильтрами.",
+        category="fundraising",
+        tags=["fundraising", "funding", "rounds"],
+        parameters=[
+            ApiParameter(name="round_type", type="string", required=False, location="query",
+                        description_en="Filter: seed, series_a, series_b", description_ru="Фильтр: seed, series_a, series_b"),
+            ApiParameter(name="min_amount", type="number", required=False, location="query",
+                        description_en="Minimum raise amount in USD", description_ru="Минимальная сумма в USD"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Fundraising rounds", description_ru="Раунды финансирования")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="fundraising_recent",
+        path="/api/v1/fundraising/recent",
+        method=HttpMethod.GET,
+        title_en="Recent Fundraising Rounds",
+        title_ru="Недавние раунды финансирования",
+        description_en="Get most recent fundraising rounds.",
+        description_ru="Получить последние раунды финансирования.",
+        category="fundraising",
+        tags=["fundraising", "recent"],
+        parameters=[
+            ApiParameter(name="days", type="integer", required=False, location="query",
+                        description_en="Days back", description_ru="Дней назад", default=30),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=50)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Recent rounds", description_ru="Недавние раунды")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="fundraising_top",
+        path="/api/v1/fundraising/top",
+        method=HttpMethod.GET,
+        title_en="Top Fundraising Rounds",
+        title_ru="Топ раунды финансирования",
+        description_en="Get largest fundraising rounds by amount.",
+        description_ru="Получить крупнейшие раунды финансирования по сумме.",
+        category="fundraising",
+        tags=["fundraising", "top"],
+        parameters=[
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=20)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Top rounds", description_ru="Топ раунды")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # UNLOCKS API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="unlocks_list",
+        path="/api/v1/unlocks",
+        method=HttpMethod.GET,
+        title_en="List Token Unlocks",
+        title_ru="Список анлоков токенов",
+        description_en="Get all token unlocks.",
+        description_ru="Получить все анлоки токенов.",
+        category="unlocks",
+        tags=["unlocks", "vesting", "tokens"],
+        parameters=[
+            ApiParameter(name="min_value", type="number", required=False, location="query",
+                        description_en="Minimum unlock value in USD", description_ru="Минимальная стоимость анлока в USD"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Token unlocks", description_ru="Анлоки токенов")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="unlocks_upcoming",
+        path="/api/v1/unlocks/upcoming",
+        method=HttpMethod.GET,
+        title_en="Upcoming Token Unlocks",
+        title_ru="Предстоящие анлоки токенов",
+        description_en="Get upcoming token unlocks within time window.",
+        description_ru="Получить предстоящие анлоки токенов в заданном окне.",
+        category="unlocks",
+        tags=["unlocks", "upcoming"],
+        parameters=[
+            ApiParameter(name="days", type="integer", required=False, location="query",
+                        description_en="Days ahead", description_ru="Дней вперёд", default=30),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=50)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Upcoming unlocks", description_ru="Предстоящие анлоки")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # ICO API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="ico_list",
+        path="/api/v1/ico",
+        method=HttpMethod.GET,
+        title_en="List ICOs / Token Sales",
+        title_ru="Список ICO / Token Sales",
+        description_en="Get all ICOs and token sales.",
+        description_ru="Получить все ICO и продажи токенов.",
+        category="ico",
+        tags=["ico", "token_sale"],
+        parameters=[
+            ApiParameter(name="status", type="string", required=False, location="query",
+                        description_en="Filter: upcoming, active, completed", description_ru="Фильтр: upcoming, active, completed"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=100)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="ICO list", description_ru="Список ICO")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="ico_upcoming",
+        path="/api/v1/ico/upcoming",
+        method=HttpMethod.GET,
+        title_en="Upcoming ICOs",
+        title_ru="Предстоящие ICO",
+        description_en="Get upcoming ICOs and token sales.",
+        description_ru="Получить предстоящие ICO и продажи токенов.",
+        category="ico",
+        tags=["ico", "upcoming"],
+        parameters=[],
+        responses=[
+            ApiResponse(status_code=200, description_en="Upcoming ICOs", description_ru="Предстоящие ICO")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # EXCHANGES API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="exchanges_list",
+        path="/api/v1/exchanges",
+        method=HttpMethod.GET,
+        title_en="List Exchanges",
+        title_ru="Список бирж",
+        description_en="Get list of all exchanges (CEX/DEX).",
+        description_ru="Получить список всех бирж (CEX/DEX).",
+        category="exchanges",
+        tags=["exchanges", "cex", "dex"],
+        parameters=[
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results", description_ru="Максимум результатов", default=50)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Exchanges list", description_ru="Список бирж")
+        ]
+    ),
+    
+    ApiEndpoint(
+        endpoint_id="exchange_get",
+        path="/api/v1/exchanges/{exchange}",
+        method=HttpMethod.GET,
+        title_en="Get Exchange Details",
+        title_ru="Получить детали биржи",
+        description_en="Get detailed information about an exchange.",
+        description_ru="Получить подробную информацию о бирже.",
+        category="exchanges",
+        tags=["exchanges", "details"],
+        parameters=[
+            ApiParameter(name="exchange", type="string", required=True, location="path",
+                        description_en="Exchange identifier", description_ru="Идентификатор биржи",
+                        example="binance")
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Exchange details", description_ru="Детали биржи")
+        ]
+    ),
+    
+    # ───────────────────────────────────────────────────────────
+    # SEARCH API (Public v1)
+    # ───────────────────────────────────────────────────────────
+    
+    ApiEndpoint(
+        endpoint_id="search",
+        path="/api/v1/search",
+        method=HttpMethod.GET,
+        title_en="Unified Search",
+        title_ru="Универсальный поиск",
+        description_en="Search across all entities: projects, funds, persons, exchanges.",
+        description_ru="Поиск по всем сущностям: проекты, фонды, персоны, биржи.",
+        category="search",
+        tags=["search", "find"],
+        parameters=[
+            ApiParameter(name="q", type="string", required=True, location="query",
+                        description_en="Search query", description_ru="Поисковый запрос",
+                        example="ethereum"),
+            ApiParameter(name="limit", type="integer", required=False, location="query",
+                        description_en="Maximum results per entity type", description_ru="Максимум результатов по типу", default=20)
+        ],
+        responses=[
+            ApiResponse(status_code=200, description_en="Search results", description_ru="Результаты поиска",
+                       example={
+                           "query": "ethereum",
+                           "total": 5,
+                           "results": {
+                               "projects": [{"name": "Ethereum", "symbol": "ETH"}],
+                               "funds": [],
+                               "persons": [{"name": "Vitalik Buterin"}],
+                               "exchanges": []
+                           }
+                       })
+        ]
+    ),
 ]
 
 
