@@ -1,12 +1,14 @@
 """
-Global Proxy Manager with Failover
+Global Proxy Manager with Failover + MongoDB Persistence
 - Multiple proxies with priority order
 - Automatic failover (not rotation!)
 - Admin API for management
+- Saves to MongoDB for persistence across restarts
 """
 
 import os
 import logging
+import asyncio
 from typing import Optional, Dict, Any, List, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
