@@ -1508,6 +1508,104 @@ async def get_proxy_status():
     }
 
 
+@router.post("/admin/proxy/add")
+async def add_proxy(
+    request: Request
+):
+    """
+    Add new proxy to the pool.
+    
+    Body:
+    {
+        "server": "http://proxy.example.com:8080",
+        "username": "user",  // optional
+        "password": "pass",  // optional
+        "priority": 1        // optional, lower = higher priority
+    }
+    """
+    from ..common.proxy_manager import proxy_manager
+    data = await request.json()
+    
+    result = proxy_manager.add_proxy(
+        server=data.get("server"),
+        username=data.get("username"),
+        password=data.get("password"),
+        priority=data.get("priority")
+    )
+    
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "action": "added",
+        **result,
+        "status": proxy_manager.get_status()
+    }
+
+
+@router.delete("/admin/proxy/{proxy_id}")
+async def remove_proxy(proxy_id: int):
+    """Remove proxy by ID"""
+    from ..common.proxy_manager import proxy_manager
+    result = proxy_manager.remove_proxy(proxy_id)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "action": "removed",
+        **result,
+        "status": proxy_manager.get_status()
+    }
+
+
+@router.post("/admin/proxy/{proxy_id}/priority")
+async def set_proxy_priority(
+    proxy_id: int,
+    priority: int = Query(..., description="Priority (1=highest)")
+):
+    """Set proxy priority"""
+    from ..common.proxy_manager import proxy_manager
+    result = proxy_manager.set_priority(proxy_id, priority)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "action": "priority_updated",
+        **result
+    }
+
+
+@router.post("/admin/proxy/{proxy_id}/enable")
+async def enable_proxy(proxy_id: int):
+    """Enable proxy"""
+    from ..common.proxy_manager import proxy_manager
+    result = proxy_manager.enable_proxy(proxy_id)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "action": "enabled",
+        **result
+    }
+
+
+@router.post("/admin/proxy/{proxy_id}/disable")
+async def disable_proxy(proxy_id: int):
+    """Disable proxy"""
+    from ..common.proxy_manager import proxy_manager
+    result = proxy_manager.disable_proxy(proxy_id)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        "action": "disabled",
+        **result
+    }
+
+
+@router.post("/admin/proxy/test")
+async def test_proxies(
+    proxy_id: int = Query(None, description="Test specific proxy ID, or all if not set")
+):
+    """Test proxy connectivity to Binance/Bybit"""
+    from ..common.proxy_manager import proxy_manager
+    result = await proxy_manager.test_proxy(proxy_id)
+    return {
+        "ts": int(datetime.now(timezone.utc).timestamp() * 1000),
+        **result
+    }
+
+
 @router.post("/admin/proxy/set")
 async def set_proxy(
     server: str = Query(..., description="Proxy server (http://host:port)"),
@@ -1515,7 +1613,7 @@ async def set_proxy(
     password: str = Query(None, description="Proxy password (optional)")
 ):
     """
-    Set global proxy for all scrapers.
+    Set global proxy for all scrapers (replaces all existing).
     
     Example: http://proxy.example.com:8080
     With auth: http://user:pass@proxy.example.com:8080
@@ -1531,7 +1629,7 @@ async def set_proxy(
 
 @router.post("/admin/proxy/clear")
 async def clear_proxy():
-    """Clear proxy - use direct connection"""
+    """Clear all proxies - use direct connection"""
     from ..common.proxy_manager import proxy_manager
     proxy_manager.clear_proxy()
     return {
